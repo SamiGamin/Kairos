@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">Kairos</string>
+    <string name="descripcion_servicio_accesibilidad">Este servicio lee el texto de los elementos en la pantalla para mostrarlo en Logcat. Es una herramienta de aprendizaje y depuración.</string>
+
+    <!-- Textos para la Actividad de Bienvenida -->
+    <string name="mensaje_bienvenida_app">¡Bienvenido a Kairos asistente!</string>
+    <string name="explicacion_permiso_accesibilidad">Para funcionar correctamente, Kairos necesita que actives su Servicio de Accesibilidad. Esto permitirá a la aplicación analizar la información en pantalla y ayudarte con tus tareas. Por favor, activa el servicio en los ajustes del sistema.</string>
+    <string name="boton_activar_servicio_accesibilidad">Activar Servicio de Accesibilidad</string>
+    <string name="boton_continuar">Continuar</string>
+
+    <!-- Textos para Configuración de Distancia de Recogida -->
+    <string name="etiqueta_distancia_maxima">Distancia máxima para ir a recoger (km):</string>
+    <string name="pista_ingresar_distancia_km">Ingrese distancia de recogida (ej: 5.0)</string>
+    <string name="boton_guardar_distancia">Guardar Distancia Recogida</string>
+    <string name="texto_distancia_actual_guardada">Distancia de recogida actual: %.1f km</string>
+    <string name="texto_distancia_no_configurada">Distancia no configurada. Usando valor por defecto.</string>
+    <string name="toast_distancia_guardada">Distancia de recogida guardada: %.1f km</string>
+    <string name="toast_error_formato_distancia">Error: Ingrese un número válido para la distancia de recogida.</string>
+
+    <!-- Textos para Configuración de Tarifa -->
+    <string name="etiqueta_config_tarifa">Tarifa deseada por kilómetro</string>
+    <string name="pista_ingresar_tarifa">Ingrese la tarifa en COL$ por kilómetro</string>
+    <string name="boton_guardar_tarifa">Guardar Tarifa</string>
+    <string name="texto_tarifa_actual">Tarifa actual: COL$%d por km</string>
+    <string name="toast_tarifa_guardada">Tarifa guardada: COL$%d por km</string>
+    <string name="toast_error_formato_tarifa">Error: Ingrese un valor numérico válido para la tarifa</string>
+
+    <!-- Textos para Configuración de Distancia Máxima del Viaje (A-B) -->
+    <string name="etiqueta_distancia_maxima_viaje_ab">Distancia máxima del viaje A-B (km):</string>
+    <string name="pista_ingresar_distancia_viaje_ab_km">Ingrese distancia máx. del viaje (ej: 15.0)</string>
+    <string name="boton_guardar_distancia_viaje_ab">Guardar Distancia Viaje</string>
+    <string name="texto_distancia_viaje_ab_guardada">Distancia máx. de viaje A-B: %.1f km</string>
+    <string name="toast_distancia_viaje_ab_guardada">Distancia máx. de viaje A-B guardada: %.1f km</string>
+    <string name="toast_error_formato_distancia_viaje_ab">Error: Ingrese un número válido para la distancia máx. del viaje.</string>
+
+    <!-- Textos para el menú de navegación inferior -->
+    <string name="titulo_menu_indrive_config">Config. InDrive</string>
+</resources>

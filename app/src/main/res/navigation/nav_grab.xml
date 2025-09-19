@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_grab"
+    app:startDestination="@id/fragmentoIndrive">
+
+    <fragment
+        android:id="@+id/fragmentoIndrive"
+        android:name="com.kairos.ast.ui.indrive.FragmentoIndrive"
+        android:label="fragmento_indrive"
+        tools:layout="@layout/fragmento_indrive" />
+</navigation>

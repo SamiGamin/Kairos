@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "964806645346",
+    "project_id": "kairosast-32739",
+    "storage_bucket": "kairosast-32739.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964806645346:android:c7fdf1600ecefc39cea33b",
+        "android_client_info": {
+          "package_name": "com.kairos.ast"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAY92R3o2QH5Yrlu8YtZL33IOe949HE_04"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
