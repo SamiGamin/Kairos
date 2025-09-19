@@ -31,12 +31,13 @@ class ServicioAccesibilidad : AccessibilityService() {
     private enum class EstadoDelServicio {
         BUSCANDO_EN_LISTA,
         ESPERANDO_APARICION_DETALLE,
-        EN_PANTALLA_DETALLE,
+        EN_PANTALLA_DETALLE, // Estado para hacer scroll
         ESPERANDO_DIALOGO_TARIFA,
         EN_DIALOGO_TARIFA
     }
 
     private var estadoActual = EstadoDelServicio.BUSCANDO_EN_LISTA
+    private var haHechoScrollEnDetalle = false
     private var distanciaMaximaKmConfigurada: Float = MainActivity.VALOR_POR_DEFECTO_DISTANCIA_KM
     private var distanciaMaximaViajeABKmConfigurada: Float = MainActivity.VALOR_POR_DEFECTO_DISTANCIA_VIAJE_AB_KM
 
@@ -98,71 +99,56 @@ class ServicioAccesibilidad : AccessibilityService() {
     override fun onAccessibilityEvent(evento: AccessibilityEvent?) {
         if (evento == null) return
 
-        val nodoRaiz = rootInActiveWindow ?: return
-
-        try {
-            when (estadoActual) {
-                EstadoDelServicio.BUSCANDO_EN_LISTA -> gestionarEstadoBuscandoEnLista(
-                    evento,
-                    nodoRaiz
-                )
-                EstadoDelServicio.ESPERANDO_APARICION_DETALLE -> gestionarEstadoEsperandoDetalle(
-                    evento,
-                    nodoRaiz
-                )
-                EstadoDelServicio.EN_PANTALLA_DETALLE -> gestionarEstadoEnDetalle(evento, nodoRaiz)
-                EstadoDelServicio.ESPERANDO_DIALOGO_TARIFA -> gestionarEstadoEsperandoDialogo(
-                    evento,
-                    nodoRaiz
-                )
-                EstadoDelServicio.EN_DIALOGO_TARIFA -> { /* No hacer nada aquí, espera la coroutine */ }
-            }
-        } finally {
-            nodoRaiz.recycle()
-        }
-    }
-
-
-// --- GESTIÓN DE ESTADOS (SIMPLIFICADA) ---
-
-    private fun gestionarEstadoBuscandoEnLista(
-        evento: AccessibilityEvent?,
-        nodoRaiz: AccessibilityNodeInfo
-    ) {
-        if (evento?.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED || evento?.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-            // Loguear la estructura de nodos de la pantalla de lista de viajes para análisis
-            Log.d(TAG_LOG, "Detectado cambio en lista de viajes. Ejecutando NodeDumper...")
-            AccessibilityNodeDumper.dumpNodes(nodoRaiz) // Llamada al dumper
-
-            // Lanzar una corrutina para manejar la función suspend
-            serviceScope.launch {
-                val nodoParaClic = ListaViajesProcessor.encontrarViajeParaAceptar(
-                    nodoRaiz,
-                    distanciaMaximaKmConfigurada,
-                    distanciaMaximaViajeABKmConfigurada
-                )
-
-                if (nodoParaClic != null) {
-                    if (intentarHacerClic(nodoParaClic)) {
-                        Log.i(
-                            TAG_LOG,
-                            "==> [SERVICIO] Clic realizado con éxito. Transicionando a ESPERANDO_APARICION_DETALLE."
-                        )
-                        estadoActual = EstadoDelServicio.ESPERANDO_APARICION_DETALLE
-                    } else {
-                        Log.w(TAG_LOG, "==> [SERVICIO] Se encontró un viaje, pero el clic falló.")
-                    }
-                    nodoParaClic.recycle()
+        // Lanzar todo el manejo de eventos en una corrutina para permitir funciones suspend con delays
+        serviceScope.launch {
+            val nodoRaiz = rootInActiveWindow ?: return@launch
+            try {
+                when (estadoActual) {
+                    EstadoDelServicio.BUSCANDO_EN_LISTA -> gestionarEstadoBuscandoEnLista(evento, nodoRaiz)
+                    EstadoDelServicio.ESPERANDO_APARICION_DETALLE -> gestionarEstadoEsperandoDetalle(evento, nodoRaiz)
+                    EstadoDelServicio.EN_PANTALLA_DETALLE -> gestionarEstadoEnDetalle(evento, nodoRaiz)
+                    EstadoDelServicio.ESPERANDO_DIALOGO_TARIFA -> gestionarEstadoEsperandoDialogo(evento, nodoRaiz)
+                    EstadoDelServicio.EN_DIALOGO_TARIFA -> { /* No hacer nada aquí, espera la coroutine */ }
                 }
+            } finally {
+                nodoRaiz.recycle()
             }
         }
     }
 
-    private fun gestionarEstadoEsperandoDetalle(
-        evento: AccessibilityEvent?,
+
+// --- GESTIÓN DE ESTADOS ---
+    private suspend fun gestionarEstadoBuscandoEnLista(
+        evento: AccessibilityEvent,
         nodoRaiz: AccessibilityNodeInfo
     ) {
-        if (evento?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || evento?.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+        if (evento.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED || evento.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+            val nodoParaClic = ListaViajesProcessor.encontrarViajeParaAceptar(
+                nodoRaiz,
+                distanciaMaximaKmConfigurada,
+                distanciaMaximaViajeABKmConfigurada
+            )
+
+            if (nodoParaClic != null) {
+                if (intentarHacerClic(nodoParaClic)) {
+                    Log.i(
+                        TAG_LOG,
+                        "==> [SERVICIO] Clic realizado con éxito. Transicionando a ESPERANDO_APARICION_DETALLE."
+                    )
+                    estadoActual = EstadoDelServicio.ESPERANDO_APARICION_DETALLE
+                } else {
+                    Log.w(TAG_LOG, "==> [SERVICIO] Se encontró un viaje, pero el clic falló.")
+                }
+                nodoParaClic.recycle()
+            }
+        }
+    }
+
+    private suspend fun gestionarEstadoEsperandoDetalle(
+        evento: AccessibilityEvent,
+        nodoRaiz: AccessibilityNodeInfo
+    ) {
+        if (evento.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || evento.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
             if (esLaPantallaDeDetalle(nodoRaiz)) {
                 Log.i(
                     TAG_LOG,
@@ -173,59 +159,90 @@ class ServicioAccesibilidad : AccessibilityService() {
         }
     }
 
-    private fun gestionarEstadoEnDetalle(evento: AccessibilityEvent?, nodoRaiz: AccessibilityNodeInfo) {
+    private suspend fun gestionarEstadoEnDetalle(evento: AccessibilityEvent, nodoRaiz: AccessibilityNodeInfo) {
         if (!esLaPantallaDeDetalle(nodoRaiz)) {
             estadoActual = EstadoDelServicio.BUSCANDO_EN_LISTA
             return
         }
 
-        if (evento?.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
-            val infoViaje = DetalleViajeParser.parsear(nodoRaiz)
+        if (evento.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            // --- LÓGICA DE SCROLL CON DELAY ---
+            Log.d(TAG_LOG, "En pantalla de detalle, buscando ImageView de scroll...")
+            val scrollImageView = findNode(nodoRaiz) { it.className == "android.widget.ImageView" && it.isClickable && it.text.isNullOrEmpty() && it.contentDescription.isNullOrEmpty() }
+            if (scrollImageView != null) {
+                Log.i(TAG_LOG, "ImageView de scroll encontrada, haciendo clic para revelar botones.")
+                intentarHacerClic(scrollImageView)
+                scrollImageView.recycle()
+                Log.i(TAG_LOG, "Esperando 500ms para que el scroll termine...")
+                delay(500L) // Pausa crucial para la animación de scroll
+            } else {
+                Log.w(TAG_LOG, "No se encontró la ImageView de scroll, se procederá directamente.")
+            }
+            // --- FIN LÓGICA DE SCROLL ---
+
+            val nodoRaizActualizado = rootInActiveWindow ?: return // Re-obtener el nodo raíz por si cambió
+            val infoViaje = DetalleViajeParser.parsear(nodoRaizActualizado)
 
             Log.i(TAG_LOG, "--- INICIO CÁLCULO DE VIAJE ---")
             Log.i(TAG_LOG, "[INFO] Precio Sugerido: ${infoViaje.precioSugeridoNumerico}")
             Log.i(TAG_LOG, "[API] Distancia REAL: ${infoViaje.distanciaViajeRealKm} km")
 
-            if (infoViaje.distanciaViajeRealKm != null && infoViaje.distanciaViajeRealKm > 0) {
-                val precioMinimo = infoViaje.distanciaViajeRealKm * gananciaPorKmDeseada
-                Log.i(TAG_LOG, "[CÁLCULO] Precio mínimo aceptable: $precioMinimo")
+            var tarifaParaOfertar: Int? = null
 
-                if (infoViaje.precioSugeridoNumerico != null && infoViaje.precioSugeridoNumerico >= precioMinimo) {
-                    Log.i(TAG_LOG, "[DECISIÓN] Aceptando precio sugerido...")
+            if (infoViaje.distanciaViajeRealKm != null && infoViaje.distanciaViajeRealKm > 0) {
+                if (infoViaje.distanciaViajeRealKm < 5.0f) {
+                    tarifaParaOfertar = 65000
+                    Log.i(TAG_LOG, "[CÁLCULO] Viaje < 5km. Usando tarifa fija de $tarifaParaOfertar")
+                } else {
+                    val precioMinimo = infoViaje.distanciaViajeRealKm * gananciaPorKmDeseada
+                    val contraoferta = (Math.ceil(precioMinimo / 500.0) * 500).toInt()
+                    tarifaParaOfertar = contraoferta
+                    Log.i(TAG_LOG, "[CÁLCULO] Viaje >= 5km. Precio mínimo: $precioMinimo, Oferta redondeada: $tarifaParaOfertar")
+                }
+            }
+
+            if (tarifaParaOfertar != null) {
+                 if (infoViaje.precioSugeridoNumerico != null && infoViaje.precioSugeridoNumerico >= tarifaParaOfertar) {
+                    Log.i(TAG_LOG, "[DECISIÓN] Aceptando precio sugerido (${infoViaje.precioSugeridoNumerico}) porque es >= a nuestra tarifa calculada ($tarifaParaOfertar).")
                     infoViaje.botones.nodoBotonAceptar?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                     infoViaje.botones.nodoBotonAceptar?.recycle()
                     estadoActual = EstadoDelServicio.BUSCANDO_EN_LISTA
                 } else {
-                    val contraoferta = (Math.ceil(precioMinimo / 500.0) * 500).toInt()
-                    this.tarifaACalcular = contraoferta.toString()
+                    this.tarifaACalcular = tarifaParaOfertar.toString()
                     Log.i(TAG_LOG, "[DECISIÓN] Contraofertando: $tarifaACalcular")
 
                     infoViaje.botones.nodoBotonEditar?.let {
-                        hacerClicPorGesto(it)
+                        if (intentarHacerClic(it)) {
+                            Log.i(TAG_LOG, "Clic en botón Editar parece exitoso. Esperando diálogo.")
+                            estadoActual = EstadoDelServicio.ESPERANDO_DIALOGO_TARIFA
+                        } else {
+                            Log.w(TAG_LOG, "Clic en botón Editar falló. Volviendo a buscar.")
+                            estadoActual = EstadoDelServicio.BUSCANDO_EN_LISTA
+                        }
                         it.recycle()
-                        estadoActual = EstadoDelServicio.ESPERANDO_DIALOGO_TARIFA
                     } ?: run {
+                        Log.w(TAG_LOG, "Se quería contraofertar pero no se encontró el botón de editar.")
                         estadoActual = EstadoDelServicio.BUSCANDO_EN_LISTA
                     }
                 }
             } else {
+                Log.w(TAG_LOG, "No se pudo calcular una tarifa para ofertar (distancia desconocida). Volviendo a buscar.")
                 estadoActual = EstadoDelServicio.BUSCANDO_EN_LISTA
             }
+            if (nodoRaizActualizado != nodoRaiz) { nodoRaizActualizado.recycle() }
         }
     }
 
-    private fun gestionarEstadoEsperandoDialogo(
-        evento: AccessibilityEvent?,
+    private suspend fun gestionarEstadoEsperandoDialogo(
+        evento: AccessibilityEvent,
         nodoRaiz: AccessibilityNodeInfo
     ) {
-        if (evento?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+        if (evento.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             estadoActual = EstadoDelServicio.EN_DIALOGO_TARIFA
-            serviceScope.launch {
-                delay(300L)
-                rootInActiveWindow?.let {
-                    gestionarEstadoEnDialogo(it)
-                    it.recycle()
-                }
+            delay(300L)
+            rootInActiveWindow?.let {
+                gestionarEstadoEnDialogo(it)
+                it.recycle()
             }
         }
     }
@@ -243,27 +260,31 @@ class ServicioAccesibilidad : AccessibilityService() {
 
 
     // --- FUNCIONES AUXILIARES DEL SERVICIO ---
-
-    private fun esLaPantallaDeDetalle(nodoRaiz: AccessibilityNodeInfo): Boolean {
+    private fun findNode(nodoRaiz: AccessibilityNodeInfo, predicado: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo? {
         val cola = ArrayDeque<AccessibilityNodeInfo>().apply { add(nodoRaiz) }
         while (cola.isNotEmpty()) {
             val nodo = cola.removeFirst()
-            nodo.text?.toString()?.let { texto ->
-                if (TEXTOS_CLAVE_PANTALLA_DETALLE.any { clave ->
-                        texto.contains(
-                            clave,
-                            ignoreCase = true
-                        )
-                    }) return true
+            if (predicado(nodo)) {
+                return nodo
             }
             for (i in 0 until nodo.childCount) {
                 nodo.getChild(i)?.let { cola.addLast(it) }
             }
         }
-        return false
+        return null
+    }
+
+    private fun esLaPantallaDeDetalle(nodoRaiz: AccessibilityNodeInfo): Boolean {
+        return findNode(nodoRaiz) { nodo ->
+            TEXTOS_CLAVE_PANTALLA_DETALLE.any { clave ->
+                nodo.text?.toString()?.contains(clave, ignoreCase = true) == true
+            }
+        } != null
     }
 
     private fun intentarHacerClic(nodo: AccessibilityNodeInfo): Boolean {
+
+
         var nodoClicable: AccessibilityNodeInfo? = nodo
         var intentos = 0
         while (nodoClicable != null && intentos < 5) {

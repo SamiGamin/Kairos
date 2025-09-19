@@ -14,12 +14,8 @@ object ListaViajesProcessor {
     private const val TAG_LOG = "ListaViajesProcessor"
     // Expresión regular para la distancia de RECOGIDA (ej: "~ 1.5 km", "800 metros")
     private val REGEX_DISTANCIA_RECOGIDA = Regex("""~?\s*([\d,.]+)\s*(km|metro|metros)""", RegexOption.IGNORE_CASE)
-    // Expresión regular para identificar posibles direcciones (más estricta):
-    // No debe contener patrones de distancia, tiempo o precio.
-    private val REGEX_POSIBLE_DIRECCION = Regex("""^(?!.*(?:[\d,.]+)\s*(?:km|min|metro|metros|horas?)\b|.*COL\$\s*[\d,.]+).*""", RegexOption.IGNORE_CASE)
-
     // Expresión regular para el tiempo del VIAJE A-B (ej: "25 min") - utilizado para logs o futuro uso
-    private val REGEX_TIEMPO_VIAJE_AB = Regex("""(\d+)\s*min(?:uto)?s?""", RegexOption.IGNORE_CASE)
+    private val REGEX_TIEMPO_VIAJE_AB = Regex("""(\d+)\s*min(uto)?s?""", RegexOption.IGNORE_CASE)
     // Expresión regular para la distancia del VIAJE A-B (ej: "12.5 km") - utilizado para logs o futuro uso
     private val REGEX_DISTANCIA_VIAJE_AB = Regex("""([\d,.]+)\s*km""", RegexOption.IGNORE_CASE)
 
@@ -77,7 +73,6 @@ object ListaViajesProcessor {
                                 TAG_LOG,
                                 "¡VIAJE COMPATIBLE ENCONTRADO! Recogida: ${infoExtraida.distanciaRecogidaKm} km, Viaje A-B (API): $distanciaViajeABApiKm km (Máx: $distanciaMaximaViajeABKm km)."
                             )
-                            // No reciclar contenedorViaje aquí, se devuelve para ser usado.
                             return contenedorViaje
                         } else {
                             Log.d(TAG_LOG, "Viaje descartado por distancia A-B (API): $distanciaViajeABApiKm km > $distanciaMaximaViajeABKm km.")
@@ -91,16 +86,8 @@ object ListaViajesProcessor {
             } else if (infoExtraida.distanciaRecogidaKm != null) {
                 Log.d(TAG_LOG, "Viaje descartado por distancia de RECOGIDA: ${infoExtraida.distanciaRecogidaKm} km > $distanciaMaximaRecogidaKm km.")
             }
-            // Si el contenedor no es el elegido, y no se devolvió, se debe reciclar si fue añadido a la lista y no es el nodoRaiz.
-            // Sin embargo, `encontrarContenedoresDeViaje` devuelve nodos que deben ser manejados por el llamador o este bucle.
-            // Si `contenedorViaje` no se devuelve, se debería reciclar al final de esta iteración si es seguro.
-            // Por ahora, asumimos que si no se retorna, no se usa más.
-            // IMPORTANTE: El reciclaje aquí es complejo. El que llama a `encontrarViajeParaAceptar` es responsable de reciclar el nodo devuelto.
-            // Los nodos intermedios que `encontrarContenedoresDeViaje` encuentra y `contenedorViaje` (si no se devuelve) deben ser reciclados con cuidado.
         }
-        // Si el bucle termina, no se encontró ningún viaje adecuado.
-        // Reciclar los contenedores que no fueron seleccionados.
-        contenedoresViaje.forEach { it.recycle() } // Asegurarse que esto no recicla el nodoRaiz si está en la lista.
+        contenedoresViaje.forEach { it.recycle() }
         return null
     }
 
@@ -113,16 +100,11 @@ object ListaViajesProcessor {
         val distanciaViajeABKm: Float? = null
     )
 
-    /**
-     * Recorre los hijos de un ViewGroup (contenedor de ítem de viaje) para extraer
-     * la distancia de recogida y las direcciones de origen y destino de los TextViews.
-     */
     private fun extraerInformacionDelContenedor(contenedorViaje: AccessibilityNodeInfo): InfoContenedorViaje {
         var distanciaRecogida: Float? = null
-        var direccionOrigen: String? = null
-        var direccionDestino: String? = null
         var tiempoViajeAB: Int? = null
         var distanciaViajeAB: Float? = null
+        val posiblesDirecciones = mutableListOf<String>()
 
         val colaHijos = ArrayDeque<AccessibilityNodeInfo>()
         for (i in 0 until contenedorViaje.childCount) {
@@ -134,44 +116,74 @@ object ListaViajesProcessor {
             val textoHijo = hijo.text?.toString()
 
             if (!textoHijo.isNullOrEmpty()) {
-                // 1. Intentar extraer distancia de recogida
-                if (distanciaRecogida == null) {
+                // Prioridad 1: Extraer distancia de recogida y saltar
+                if (distanciaRecogida == null && REGEX_DISTANCIA_RECOGIDA.find(textoHijo) != null) {
                     distanciaRecogida = extraerDistanciaRecogidaEnKm(textoHijo)
-                    if (distanciaRecogida != null) {
-                        Log.d(TAG_LOG, "Distancia de recogida extraída: $distanciaRecogida km del texto '$textoHijo'")
-                        // Si se extrajo, no intentar como dirección ni otras cosas con este texto.
-                    }
+                    Log.d(TAG_LOG, "Dato extraído (Distancia Recogida): $distanciaRecogida km del texto '$textoHijo'")
+                    continue
                 }
 
-                // 2. Intentar extraer tiempo y distancia del viaje A-B (UI) para logs/futuro uso
-                if (tiempoViajeAB == null) {
-                    tiempoViajeAB = extraerTiempoViajeABEnMinutos(textoHijo)
-                }
-                if (distanciaViajeAB == null) {
-                    distanciaViajeAB = extraerDistanciaViajeABEnKm(textoHijo)
+                // Prioridad 2: Extraer datos de UI (tiempo/distancia) y saltar
+                if (REGEX_TIEMPO_VIAJE_AB.find(textoHijo) != null || REGEX_DISTANCIA_VIAJE_AB.find(textoHijo) != null) {
+                    if (tiempoViajeAB == null) tiempoViajeAB = extraerTiempoViajeABEnMinutos(textoHijo)
+                    if (distanciaViajeAB == null) distanciaViajeAB = extraerDistanciaViajeABEnKm(textoHijo)
+                    Log.d(TAG_LOG, "Dato extraído (Tiempo/Distancia UI): '$textoHijo'")
+                    continue
                 }
 
-                // 3. Intentar extraer direcciones si no se han encontrado todas y el texto parece una dirección
-                if (REGEX_POSIBLE_DIRECCION.matches(textoHijo)) { // Usa la regex más estricta
-                    if (direccionOrigen == null) {
-                        direccionOrigen = textoHijo
-                        Log.d(TAG_LOG, "Posible origen encontrado: '$direccionOrigen' (de '$textoHijo')")
-                    } else if (direccionDestino == null) {
-                        direccionDestino = textoHijo
-                        Log.d(TAG_LOG, "Posible destino encontrado: '$direccionDestino' (de '$textoHijo')")
+                // Prioridad 3: Descartar basura conocida (precio, etc.) y saltar
+                if (textoHijo.startsWith("COL$")) {
+                    Log.d(TAG_LOG, "Texto descartado (Precio): '$textoHijo'")
+                    continue
+                }
+
+                // Prioridad 4: Identificar si es una dirección usando una heurística más robusta
+                val esPotencialDireccion = textoHijo.length > 10 &&
+                        (textoHijo.contains("#") ||
+                         textoHijo.contains("(") ||
+                         textoHijo.contains("cl", ignoreCase = true) ||
+                         textoHijo.contains("kr", ignoreCase = true) ||
+                         textoHijo.contains("cr", ignoreCase = true) ||
+                         textoHijo.contains("calle", ignoreCase = true) ||
+                         textoHijo.contains("carrera", ignoreCase = true) ||
+                         textoHijo.contains("tv", ignoreCase = true) ||
+                         textoHijo.contains("transversal", ignoreCase = true) ||
+                         textoHijo.contains("dg", ignoreCase = true) ||
+                         textoHijo.contains("diagonal", ignoreCase = true) ||
+                         textoHijo.contains("av", ignoreCase = true) ||
+                         textoHijo.contains("avenida", ignoreCase = true) ||
+                         textoHijo.contains("portal", ignoreCase = true) ||
+                         textoHijo.contains("terminal", ignoreCase = true)
+                        )
+
+                val esSoloNumeroEntreParentesis = textoHijo.matches(Regex("^(\\d+)"))
+
+                if (esPotencialDireccion && !esSoloNumeroEntreParentesis) {
+                    if (!posiblesDirecciones.contains(textoHijo)) {
+                        posiblesDirecciones.add(textoHijo)
+                        Log.d(TAG_LOG, "Posible dirección AÑADIDA por heurística: '$textoHijo'")
                     }
+                } else {
+                    Log.d(TAG_LOG, "Texto descartado como dirección (no pasa heurística): '$textoHijo'")
                 }
             }
 
-            // Explorar hijos de ViewGroups anidados para una búsqueda más profunda
+            // Explorar hijos de ViewGroups anidados
             if (hijo.childCount > 0 && hijo.className.toString().contains("ViewGroup", ignoreCase = true)) {
                 for (i in 0 until hijo.childCount) {
                     hijo.getChild(i)?.let { colaHijos.addLast(it) }
                 }
             }
-            // El reciclaje de `hijo` es complicado aquí porque su texto podría ser usado.
-            // Es más seguro dejar que el nodo `contenedorViaje` se recicle por su llamador.
         }
+
+        val direccionOrigen = posiblesDirecciones.getOrNull(0)
+        val direccionDestino = posiblesDirecciones.getOrNull(1)
+
+        if(direccionOrigen != null) Log.i(TAG_LOG, "Dirección de Origen asignada: '$direccionOrigen'")
+        else Log.w(TAG_LOG, "No se pudo determinar la dirección de Origen.")
+
+        if(direccionDestino != null) Log.i(TAG_LOG, "Dirección de Destino asignada: '$direccionDestino'")
+        else Log.w(TAG_LOG, "No se pudo determinar la dirección de Destino.")
 
         return InfoContenedorViaje(distanciaRecogida, direccionOrigen, direccionDestino, tiempoViajeAB, distanciaViajeAB)
     }
@@ -183,8 +195,7 @@ object ListaViajesProcessor {
     private fun encontrarContenedoresDeViaje(nodoActual: AccessibilityNodeInfo, listaContenedores: MutableList<AccessibilityNodeInfo>) {
         if (nodoActual.className != null && nodoActual.className.toString().contains("ViewGroup", ignoreCase = true) && nodoActual.isClickable) {
             Log.d(TAG_LOG, "ViewGroup clicable encontrado: ${nodoActual.className}, añadiendo a la lista de contenedores.")
-            listaContenedores.add(nodoActual) // Añadir el nodo, no reciclarlo aquí.
-            // No seguir buscando dentro de un contenedor de viaje ya identificado para evitar procesar sub-elementos como contenedores independientes.
+            listaContenedores.add(nodoActual)
             return
         }
 
@@ -192,10 +203,6 @@ object ListaViajesProcessor {
             val hijo = nodoActual.getChild(i)
             if (hijo != null) {
                 encontrarContenedoresDeViaje(hijo, listaContenedores)
-                if (!listaContenedores.contains(hijo)) { // Solo reciclar si no fue añadido a la lista
-                     //hijo.recycle() // El reciclaje aquí es delicado. Si el hijo se añade a la lista, no debe reciclarse aquí.
-                                    // El que recibe la lista es responsable.
-                }
             }
         }
     }
@@ -207,7 +214,7 @@ object ListaViajesProcessor {
     private fun extraerDistanciaRecogidaEnKm(texto: String): Float? {
         val resultado = REGEX_DISTANCIA_RECOGIDA.find(texto) ?: return null
         val (valorStr, unidad) = resultado.destructured
-        val valor = valorStr.replace(',', '.').toFloatOrNull() ?: return null
+        val valor = valorStr.replace(',','.').toFloatOrNull() ?: return null
         return when {
             unidad.equals("km", ignoreCase = true) -> valor
             unidad.startsWith("metro", ignoreCase = true) -> valor / 1000
@@ -232,6 +239,6 @@ object ListaViajesProcessor {
     private fun extraerDistanciaViajeABEnKm(texto: String): Float? {
         val resultado = REGEX_DISTANCIA_VIAJE_AB.find(texto) ?: return null
         val (valorStr) = resultado.destructured
-        return valorStr.replace(',', '.').toFloatOrNull()
+        return valorStr.replace(',','.').toFloatOrNull()
     }
 }

@@ -128,7 +128,7 @@ object DirectionsService {
     private fun limpiarDireccion(direccion: String): String {
         return direccion
             // 1. Quitar texto entre paréntesis
-            .replace(Regex("""\s*\(.*?\)"""), "")
+            // .replace(Regex("""\s*\(.*?\)"""), "")
             // 2. Quitar sufijos de empresa
             .replace(Regex("""\s*S\.A\.S\.?|\s*S\.A\.?|\s*Ltda\.?""", RegexOption.IGNORE_CASE), "")
             // 3. Reemplazar abreviaturas comunes con punto o sin punto
@@ -140,7 +140,7 @@ object DirectionsService {
             .replace("#", " ")
             .replace("-", " ")
             // 5. Dejar solo letras, números y espacios para eliminar cualquier otro símbolo.
-            .replace(Regex("""[^a-zA-Z0-9\s]"""), "")
+            .replace(Regex("""[^a-zA-Z0-9\s,()]"""), "")
             // 6. Limpiar espacios múltiples que puedan haber quedado
             .replace(Regex("""\s+"""), " ")
             .trim()

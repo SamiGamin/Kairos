@@ -101,7 +101,7 @@ object DetalleViajeParser {
                 // El precio que buscamos es usualmente un TextView grande no clicable.
                 val matchPrecio = REGEX_PRECIO_VIAJE.find(textoNodo)
                 if (matchPrecio != null) {
-                    val valorPrecio = matchPrecio.groupValues[1].replace(".", "").replace(",", ".").toFloatOrNull()
+                    val valorPrecio = matchPrecio.groupValues[1].replace(".", "").replace(",", "").toFloatOrNull()
                     if (valorPrecio != null) {
                         precioEncontrado = valorPrecio
                         Log.d(TAG_LOG, "Precio sugerido (no clicable) encontrado: $valorPrecio del texto '$textoNodo'")
@@ -164,10 +164,9 @@ object DetalleViajeParser {
     }
 
 
-    /** Extrae referencias a los botones importantes y las sugerencias de tarifa. */
     private fun extraerBotones(nodoRaiz: AccessibilityNodeInfo): BotonesViaje {
         var nodoAceptar: AccessibilityNodeInfo? = null
-        var nodoEditar: AccessibilityNodeInfo? = null // El icono de lápiz
+        var nodoEditar: AccessibilityNodeInfo? = null // El botón sin texto
         val sugerenciasTarifa = mutableListOf<String>()
 
         val cola = ArrayDeque<AccessibilityNodeInfo>().apply { add(nodoRaiz) }
@@ -181,38 +180,15 @@ object DetalleViajeParser {
                 Log.d(TAG_LOG, "Botón Aceptar encontrado.")
             }
 
-            // Botón Editar (icono de lápiz)
-            // Suele ser un ImageView sin texto, pero clicable y con una descripción de contenido como "Editar".
-            // O a veces no tiene ni descripción, entonces nos fiamos de su posición o tipo si es muy específico.
-            // Por ahora, una heurística simple: un ImageView clicable que NO sea el de "Atrás" o similar.
-            if (nodo.className == "android.widget.ImageView" && nodo.isClickable) {
-                // Podríamos añadir más filtros aquí, como el tamaño o la ausencia de texto.
-                // Si hay varios ImageViews clicables, necesitamos una forma de distinguirlo.
-                // De momento, si encontramos uno, lo asignamos. Si hay varios, se sobrescribirá.
-                // La imagen de la UI que vi no muestra claramente el ID del lapiz. NodeDumper ayudaría.
-                // Asumimos que es el único relevante o el último encontrado de este tipo.
-                val contentDesc = nodo.contentDescription?.toString()
-                if (contentDesc?.contains("editar", ignoreCase = true) == true || contentDesc?.contains("modificar", ignoreCase = true) == true){
-                    nodoEditar = nodo
-                    Log.d(TAG_LOG, "Botón Editar (lápiz) encontrado por descripción: $contentDesc")
-                } else if (nodoEditar == null) {
-                    // Si aún no hemos encontrado un lápiz por descripción, y este es un ImageView clicable
-                    // sin ser claramente otra cosa, podría ser nuestro candidato. Es una heurística débil.
-                    // Log.d(TAG_LOG, "Posible Botón Editar (lápiz) encontrado (ImageView clicable genérico).")
-                    // nodoEditar = nodo // Desactivado por ahora para ser más preciso.
-                }
+            // Botón Editar (un `Button` clicable sin texto)
+            if (nodo.className == "android.widget.Button" && nodo.isClickable && nodo.text.isNullOrEmpty()) {
+                // Esta es una heurística fuerte basada en el NodeDumper.
+                // Asumimos que es el único botón clicable sin texto en esta pantalla.
+                nodoEditar = nodo
+                Log.d(TAG_LOG, "Botón Editar encontrado (Button clicable sin texto)." )
             }
-            // Si no se encuentra por contentDescription, se puede buscar por el ID si se conoce.
-            // El ID "sinet.startup.inDriver:id/imageview_edit_offer" podría ser, si existe.
-            // Si no, confiar en la búsqueda por clase y propiedades.
-            if (nodo.viewIdResourceName == "sinet.startup.inDriver:id/imageview_edit_offer") { // Asumiendo este ID
-                 nodoEditar = nodo
-                 Log.d(TAG_LOG, "Botón Editar (lápiz) encontrado por ID: imageview_edit_offer")
-            }
-
-
             // Sugerencias de tarifa (ej: "COL$10,500" que son clicables)
-            if (nodo.text?.toString()?.matches(REGEX_PRECIO_VIAJE) == true && nodo.isClickable) {
+            if (nodo.className == "android.widget.Button" && nodo.text?.toString()?.startsWith("COL$") == true && nodo.isClickable) {
                 if (nodo != nodoAceptar) { // Asegurarse de que no es el mismo botón de "Aceptar por..."
                     sugerenciasTarifa.add(nodo.text.toString())
                     Log.d(TAG_LOG, "Sugerencia de tarifa encontrada: ${nodo.text}")
@@ -222,10 +198,7 @@ object DetalleViajeParser {
             for (i in 0 until nodo.childCount) {
                 nodo.getChild(i)?.let { cola.addLast(it) }
             }
-            // No reciclar nodos aquí si son `nodoAceptar` o `nodoEditar` o si están en la cola.
         }
-        // Los nodos `nodoAceptar` y `nodoEditar` se pasan en `BotonesViaje`.
-        // El servicio que los use será responsable de su ciclo de vida o de no usarlos después de que `nodoRaiz` se recicle.
         return BotonesViaje(nodoAceptar, nodoEditar, sugerenciasTarifa.distinct())
     }
 }

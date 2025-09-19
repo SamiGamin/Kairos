@@ -40,8 +40,9 @@ object DialogoTarifaProcessor {
 
         // 2. Pulsar el botón de ofertar
         if (exito && botonOfertar != null) {
-            exito = botonOfertar.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-            Log.i(TAG_LOG, "Botón Oferta pulsado: $exito")
+            Log.w(TAG_LOG, "[PRUEBA] Se habría hecho clic en OFERTAR. Acción omitida.")
+            // exito = botonOfertar.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            // Log.i(TAG_LOG, "Botón Oferta pulsado: $exito")
         }
 
         // Limpieza
