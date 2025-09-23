@@ -1,54 +1,19 @@
 package com.kairos.ast.servicios.api
 
 import android.util.Log
+import com.kairos.ast.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
-import retrofit2.http.Query
-
-// --- Modelos de datos para la API de Google ---
-
-// Para la API de Geocodificación de Google
-data class GoogleGeocodingResponse(val results: List<GeocodingResult>, val status: String)
-data class GeocodingResult(val geometry: Geometry)
-data class Geometry(val location: Location)
-data class Location(val lat: Double, val lng: Double)
-
-// Para la API de Direcciones de Google
-data class GoogleDirectionsResponse(val routes: List<Route>, val status: String)
-data class Route(val legs: List<Leg>)
-data class Leg(val distance: Distance, val duration: Duration)
-data class Distance(val value: Int) // en metros
-data class Duration(val value: Int) // en segundos
-
-// --- INTERFACES DE RETROFIT PARA GOOGLE ---
-interface GoogleGeocodingApi {
-    @GET("maps/api/geocode/json")
-    suspend fun geocodeAddress(
-        @Query("address") address: String,
-        @Query("key") apiKey: String
-    ): GoogleGeocodingResponse
-}
-
-interface GoogleDirectionsApi {
-    @GET("maps/api/directions/json")
-    suspend fun getDirections(
-        @Query("origin") origin: String,      // "lat,lng" o dirección
-        @Query("destination") destination: String, // "lat,lng" o dirección
-        @Query("key") apiKey: String
-    ): GoogleDirectionsResponse
-}
 
 /**
  * Servicio para obtener rutas e información de geocodificación desde las APIs de Google.
  */
 object DirectionsService {
 
-    // IMPORTANTE: Esta es la API Key que proporcionaste.
-    private const val API_KEY_GOOGLE = "AIzaSyBK-N8nUWnaSRZ7fVmSOSQspiQeAau7NyY"
+    private const val API_KEY_GOOGLE = BuildConfig.GOOGLE_MAPS_API_KEY
 
     private val retrofitGoogle = Retrofit.Builder()
         .baseUrl("https://maps.googleapis.com/")
@@ -63,7 +28,7 @@ object DirectionsService {
      */
     private suspend fun geocodificarDireccion(direccion: String): String? {
         try {
-            val direccionLimpia = limpiarDireccion(direccion) // Podemos reusar la limpieza si aplica
+            val direccionLimpia = limpiarDireccion(direccion) // Usamos la función del archivo de utilidades
             Log.d("DirectionsService", "[Google Geocoding] Buscando coordenadas para: '$direccionLimpia'")
             val response = googleGeocodingApi.geocodeAddress(address = direccionLimpia, apiKey = API_KEY_GOOGLE)
 
@@ -119,34 +84,5 @@ object DirectionsService {
                 return@withContext null
             }
         }
-    }
-
-    /**
-     * Limpia y estandariza una dirección. Esta función podría necesitar ajustes
-     * dependiendo de qué tan bien la API de Google maneje las direcciones originales.
-     */
-    private fun limpiarDireccion(direccion: String): String {
-        return direccion
-            // 1. Quitar texto entre paréntesis
-            // .replace(Regex("""\s*\(.*?\)"""), "")
-            // 2. Quitar sufijos de empresa
-            .replace(Regex("""\s*S\.A\.S\.?|\s*S\.A\.?|\s*Ltda\.?""", RegexOption.IGNORE_CASE), "")
-            // 3. Reemplazar abreviaturas comunes con punto o sin punto
-            .replace("Cl\\.?", "Calle", ignoreCase = true)
-            .replace("Cra\\.?", "Carrera", ignoreCase = true)
-            .replace("Tv\\.?", "Transversal", ignoreCase = true)
-            .replace("Dg\\.?", "Diagonal", ignoreCase = true)
-            // 4. Eliminar los caracteres '#' y '-' que confunden al geocodificador.
-            .replace("#", " ")
-            .replace("-", " ")
-            // 5. Dejar solo letras, números y espacios para eliminar cualquier otro símbolo.
-            .replace(Regex("""[^a-zA-Z0-9\s,()]"""), "")
-            // 6. Limpiar espacios múltiples que puedan haber quedado
-            .replace(Regex("""\s+"""), " ")
-            .trim()
-            // 7. Asegurarse de que termine con "Bogota, Colombia" si no lo tiene.
-            // Esto podría ser específico de GraphHopper y quizás no tan necesario para Google.
-            // Considera si quieres mantenerlo o ajustarlo.
-            .let { if (!it.contains("Bogota", true) && !it.contains("Colombia", true)) "$it, Bogota, Colombia" else it }
     }
 }
