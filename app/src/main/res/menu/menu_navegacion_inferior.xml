@@ -4,6 +4,9 @@
         android:id="@+id/fragmentoIndrive"
         android:icon="@drawable/ic_menu_settings"
         android:title="@string/titulo_menu_indrive_config" />
-    <item android:title="Item" />
-    <!-- Puedes añadir más items aquí en el futuro -->
+    <item
+        android:id="@+id/permisosFragment"
+        android:icon="@drawable/ic_accessibility"
+        android:title="@string/titulo_menu_indrive_config" />
+
 </menu>

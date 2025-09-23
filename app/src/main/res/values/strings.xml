@@ -35,4 +35,23 @@
 
     <!-- Textos para el menú de navegación inferior -->
     <string name="titulo_menu_indrive_config">Config. InDrive</string>
+    <string name="titulo_menu_item_placeholder">Reguistro</string>
+
+    <!-- Textos genéricos para la aplicación -->
+    <string name="aceptar">Aceptar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="ajustes">Ajustes</string>
+    <string name="error_titulo">Error</string>
+    <string name="error_mensaje_generico">Ocurrió un error inesperado. Por favor, inténtalo de nuevo.</string>
+    <string name="dialogo_guardar_titulo">Guardar Cambios</string>
+    <string name="dialogo_guardar_mensaje">¿Estás seguro de que deseas guardar los cambios?</string>
+    <string name="toast_cambios_guardados">Cambios guardados exitosamente.</string>
+
+    <!-- Textos para Ganancia Mínima por Viaje -->
+    <string name="toast_ganancia_minima_guardada">Ganancia mínima guardada</string>
+    <string name="toast_error_formato_ganancia_minima">Error en el formato de la ganancia mínima</string>
+    <string name="texto_ganancia_minima_guardada">Ganancia mínima guardada: %s</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

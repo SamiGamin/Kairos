@@ -1,63 +1,153 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.bienbenida.ActividadBienvenida">
+    android:background="@color/md_theme_background"
+    android:padding="32dp"
+    tools:context=".ui.bienbenida.Permisos">
 
-    <!-- Mensaje de bienvenida explicando la app -->
-    <TextView
-        android:id="@+id/texto_mensaje_bienvenida"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
+    <!-- Logo/Icono de la app en la parte superior -->
+    <ImageView
+        android:id="@+id/icono_app"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
         android:layout_marginTop="64dp"
-        android:layout_marginEnd="32dp"
-        android:gravity="center"
-        android:text="@string/mensaje_bienvenida_app"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:src="@drawable/ic_app_logo"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Explicación de la necesidad del permiso de accesibilidad -->
+    <!-- Título principal estilo moderno -->
     <TextView
-        android:id="@+id/texto_explicacion_accesibilidad"
+        android:id="@+id/texto_titulo_bienvenida"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
-        android:layout_marginEnd="32dp"
         android:gravity="center"
-        android:text="@string/explicacion_permiso_accesibilidad"
-        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:text="Bienvenido a tu App"
+        android:textAppearance="?attr/textAppearanceHeadlineMedium"
+        android:textColor="@color/md_theme_onBackground"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/texto_mensaje_bienvenida" />
+        app:layout_constraintTop_toBottomOf="@id/icono_app" />
 
-    <!-- Botón para ir a los ajustes de Accesibilidad -->
-    <Button
-        android:id="@+id/boton_ir_a_ajustes_accesibilidad"
-        android:layout_width="wrap_content"
+    <!-- Tarjeta de información estilo moderno -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_informacion"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="48dp"
-        android:text="@string/boton_activar_servicio_accesibilidad"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="@color/md_theme_surface"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/texto_explicacion_accesibilidad" />
+        app:layout_constraintTop_toBottomOf="@id/texto_titulo_bienvenida">
 
-    <!-- Botón para continuar (opcional, podría habilitarse después) -->
-    <Button
-        android:id="@+id/boton_continuar_a_principal"
-        android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Icono de accesibilidad -->
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/ic_accessibility"
+                android:layout_marginBottom="16dp"
+                app:tint="@color/md_theme_primary" />
+
+            <!-- Título de la tarjeta -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Permiso de Accesibilidad"
+                android:textAppearance="?attr/textAppearanceTitleLarge"
+                android:textColor="@color/md_theme_onSurface"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Descripción -->
+            <TextView
+                android:id="@+id/texto_explicacion_accesibilidad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp"
+                android:text="@string/explicacion_permiso_accesibilidad"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="@color/md_theme_onSurfaceVariant"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Botón principal estilo moderno -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/boton_ir_a_ajustes_accesibilidad"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="@string/boton_activar_servicio_accesibilidad"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                app:icon="@drawable/ic_security"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.LargeComponent" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Texto de estado/feedback -->
+    <TextView
+        android:id="@+id/texto_estado_permiso"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:text="Permiso pendiente de activación"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="@color/md_theme_secondary"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/card_informacion" />
+
+    <!-- Botón secundario para continuar -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/boton_continuar_a_principal"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="8dp"
         android:text="@string/boton_continuar"
         android:visibility="gone"
+        app:icon="@drawable/ic_arrow_forward"
+        app:iconGravity="textEnd"
+        app:iconPadding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/texto_estado_permiso"
+        tools:visibility="visible" />
+
+    <!-- Footer con información adicional -->
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:gravity="center"
+        android:text="Tu seguridad y privacidad son importantes"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="@color/md_theme_outline"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:visibility="visible" />
+        app:layout_constraintTop_toBottomOf="@+id/boton_continuar_a_principal" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -9,5 +9,58 @@
         android:id="@+id/fragmentoIndrive"
         android:name="com.kairos.ast.ui.indrive.FragmentoIndrive"
         android:label="fragmento_indrive"
-        tools:layout="@layout/fragmento_indrive" />
+        tools:layout="@layout/fragmento_indrive" >
+        <action
+            android:id="@+id/action_fragmentoIndrive_to_registroFragment"
+            app:destination="@id/registroFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/registroFragment"
+        android:name="com.kairos.ast.ui.reguistro.RegistroFragment"
+        android:label="fragment_registro"
+        tools:layout="@layout/fragment_registro" >
+
+        <action
+            android:id="@+id/action_registroFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_registroFragment_to_permisosFragment"
+            app:destination="@id/permisosFragment"
+            app:popUpTo="@id/nav_grab"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.kairos.ast.ui.Login.LoginFragment"
+        android:label="fragment_login"
+        tools:layout="@layout/fragment_login" >
+        <action
+            android:id="@+id/action_loginFragment_to_mainFragment"
+            app:destination="@id/fragmentoIndrive" />
+
+        <action
+            android:id="@+id/action_loginFragment_to_registerFragment"
+            app:destination="@id/registroFragment" />
+
+        <action
+            android:id="@+id/action_loginFragment_to_forgotPasswordFragment"
+            app:destination="@id/forgotPasswordFragment" />
+
+    </fragment>
+    <fragment
+        android:id="@+id/forgotPasswordFragment"
+        android:name="com.kairos.ast.ui.Login.ForgotPasswordFragment"
+        android:label="fragment_forgot_password"
+        tools:layout="@layout/fragment_forgot_password" />
+    <fragment
+        android:id="@+id/permisosFragment"
+        android:name="com.kairos.ast.ui.bienbenida.PermisosFragment"
+        android:label="PermisosFragment"
+        tools:layout="@layout/diseno_actividad_bienvenida" >
+        <action
+            android:id="@+id/action_permisosFragment_to_fragmentoIndrive"
+            app:destination="@id/fragmentoIndrive"
+            app:popUpTo="@id/permisosFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 </navigation>

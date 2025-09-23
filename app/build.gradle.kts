@@ -1,5 +1,9 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     alias(libs.plugins.android.application)
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.20"
+
 }
 
 android {
@@ -16,6 +20,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val localProperties = gradleLocalProperties(rootDir, providers)
+
+        buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL")}\"")
+        buildConfigField("String", "SUPABASE_KEY", "\"${localProperties.getProperty("SUPABASE_KEY")}\"")
+
+
     }
 
     buildTypes {
@@ -34,7 +44,9 @@ android {
     // Habilitar ViewBinding
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
+
 }
 
 dependencies {
@@ -52,4 +64,29 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+
+    // Asegura que todas las librerías de Ktor usen la misma versión
+    implementation(platform("io.ktor:ktor-bom:3.3.0"))
+
+    // Ktor core + Android engine
+    implementation("io.ktor:ktor-client-core")
+    implementation("io.ktor:ktor-client-android")
+
+    // Content negotiation + JSON
+    implementation("io.ktor:ktor-client-content-negotiation")
+    implementation("io.ktor:ktor-serialization-kotlinx-json")
+
+    // Supabase-KT (la versión más reciente)
+    implementation("io.github.jan-tennert.supabase:supabase-kt:3.2.3")
+    implementation("io.github.jan-tennert.supabase:supabase-kt:3.2.3")
+    implementation("io.github.jan-tennert.supabase:auth-kt:3.2.3")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:3.2.3")
+    implementation("io.github.jan-tennert.supabase:storage-kt-android:3.2.3")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+
+
+
+
 }
