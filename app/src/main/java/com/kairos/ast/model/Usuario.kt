@@ -1,15 +1,30 @@
 package com.kairos.ast.model
 
+import java.time.Instant
 import kotlinx.serialization.Serializable
 
+
 @Serializable
+
 data class Usuario(
-    val id: String, // Corregido de UUID? a String
+    val id: String,                 // uuid
     val email: String,
     val nombre: String? = null,
     val telefono: String? = null,
-    val tipo_plan: String = "gratuito",
-    val estado_plan: String = "activo",
-    val dias_gratuitos: Int = 7,
-    val email_verificado: Boolean = false
+    val tipo_plan: String = "gratuito",   // por defecto gratuito
+    val estado_plan: String = "activo",   // activo al registrarse
+    @Serializable(with = InstantSerializer::class)
+    val fecha_registro: Instant,        // timestamptz en Supabase
+    @Serializable(with = InstantSerializer::class)
+    val fecha_expiracion_plan: Instant,    // fin del trial
+    val dias_Plan: Int = 7,
+    val email_verificado: Boolean = false,
+    @Serializable(with = InstantSerializer::class)
+    val ultimo_login: Instant? = null,
+
+    @Serializable(with = InstantSerializer::class)
+    val created_at: Instant? = null,
+
+    @Serializable(with = InstantSerializer::class)
+    val updated_at: Instant? = null
 )

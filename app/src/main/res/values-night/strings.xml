@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="titulo_menu_permisos">Permisos</string>
+    <string name="titulo_menu_perfil">Perefil</string>
+</resources>

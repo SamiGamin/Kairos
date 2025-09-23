@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.kairos.ast.R
 import com.kairos.ast.databinding.FragmentForgotPasswordBinding
 
 class ForgotPasswordFragment : Fragment() {
@@ -54,7 +55,7 @@ class ForgotPasswordFragment : Fragment() {
         }
 
         binding.tvBackToLogin.setOnClickListener {
-            findNavController().popBackStack()
+            findNavController().navigate(R.id.action_forgotPasswordFragment_to_loginFragment)
         }
     }
 

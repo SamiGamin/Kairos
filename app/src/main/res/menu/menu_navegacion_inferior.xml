@@ -7,6 +7,9 @@
     <item
         android:id="@+id/permisosFragment"
         android:icon="@drawable/ic_accessibility"
-        android:title="@string/titulo_menu_indrive_config" />
-
+        android:title="@string/titulo_menu_permisos" />
+    <item
+        android:id="@+id/perfilFragment"
+        android:icon="@drawable/ic_person"
+        android:title="@string/titulo_menu_perfil" />
 </menu>

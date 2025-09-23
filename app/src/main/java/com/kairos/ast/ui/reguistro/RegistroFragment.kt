@@ -3,7 +3,6 @@ package com.kairos.ast.ui.reguistro
 // CAMBIO V3: Imports actualizados desde 'gotrue' a 'auth'
 
 // CAMBIO V3: Mantenemos 'from', pero eliminamos el import de 'insert'
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -22,6 +21,8 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import io.github.jan.supabase.SupabaseClient as JanSupabaseClient
 
 class RegistroFragment : Fragment() {
@@ -87,14 +88,24 @@ class RegistroFragment : Fragment() {
                     throw Exception("No se pudo obtener el usuario recién creado")
                 }
                 Log.d("RegistroFragment", "Usuario creado con ID: ${user.id} y email: ${user.email}")
+                // Fecha actual
+                val ahora = Instant.now()
 
+                // Fecha de expiración (7 días después)
+                val expiracion = ahora.plus(7, ChronoUnit.DAYS)
 
                 // 3. Crear el objeto Usuario
                 val nuevoUsuario = Usuario(
                     id = user.id,
                     email = emailInput,
                     nombre = nombre,
-                    telefono = if (telefono.isNotEmpty()) telefono else null
+                    telefono = if (telefono.isNotEmpty()) telefono else null,
+                    tipo_plan = "gratuito",
+                    estado_plan = "activo",
+                    dias_Plan = 7,
+                    email_verificado = true,
+                    fecha_registro = ahora,
+                    fecha_expiracion_plan = expiracion
                 )
 
                 Log.d("RegistroFragment", "Insertando usuario en tabla 'usuarios': $nuevoUsuario")
@@ -121,7 +132,7 @@ class RegistroFragment : Fragment() {
         }
     }
 
-    // (El resto de las funciones de validación y UI se mantienen igual)
+
 
     private fun validarFormulario(nombre: String, email: String, password: String): Boolean {
         if (nombre.isEmpty()) {

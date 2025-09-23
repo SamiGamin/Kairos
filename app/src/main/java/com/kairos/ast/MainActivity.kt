@@ -1,7 +1,9 @@
 package com.kairos.ast
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -27,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivityMainBinding
+    private val viewModel: MainViewModel by viewModels()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +45,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         configurarNavegacion()
+        setupPlanObservers()
     }
 
     private fun configurarNavegacion() {
@@ -58,6 +62,27 @@ class MainActivity : AppCompatActivity() {
                 .setPopUpTo(navController.graph.startDestinationId, true)
                 .build()
             navController.navigate(R.id.loginFragment, null, navOptions)
+        }
+    }
+
+    private fun setupPlanObservers() {
+        viewModel.usuario.observe(this) { usuario ->
+            val menu = binding.vistaNavegacionInferior.menu
+            val isPlanActive = usuario != null && usuario.estado_plan == "activo"
+
+            // Deshabilitar funciones si el plan no está activo
+            menu.findItem(R.id.fragmentoIndrive)?.isEnabled = isPlanActive
+            menu.findItem(R.id.permisosFragment)?.isEnabled = isPlanActive
+
+            // El perfil siempre está habilitado para poder gestionar la cuenta
+            menu.findItem(R.id.perfilFragment)?.isEnabled = true
+
+            // Opcional: Mostrar un mensaje si el usuario intenta acceder a una función deshabilitada
+            binding.vistaNavegacionInferior.setOnItemReselectedListener { item ->
+                if (!item.isEnabled) {
+                    Toast.makeText(this, "Esta función requiere un plan activo.", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 }

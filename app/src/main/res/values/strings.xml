@@ -53,5 +53,7 @@
     <string name="texto_ganancia_minima_guardada">Ganancia mínima guardada: %s</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="titulo_menu_permisos">Permisos</string>
+    <string name="titulo_menu_perfil">Perefil</string>
 
 </resources>
