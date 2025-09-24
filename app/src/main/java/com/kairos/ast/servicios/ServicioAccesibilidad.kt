@@ -19,6 +19,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+// Import añadido para el Dumper
+import com.kairos.ast.servicios.AccessibilityNodeDumper
+
 class ServicioAccesibilidad : AccessibilityService() {
 
     private var estadoActual: EstadoServicio = EstadoServicio.BuscandoEnLista
@@ -64,6 +67,16 @@ class ServicioAccesibilidad : AccessibilityService() {
         val nodoRaiz = rootInActiveWindow ?: return
 
         try {
+            // --- LÓGICA GLOBAL DE DETECCIÓN DE DETALLE ---
+            // Si detectamos la pantalla de detalle y estamos en un estado de búsqueda,
+            // forzamos la transición para analizar el viaje, sin importar cómo se llegó a él.
+            if (estadoActual is EstadoServicio.BuscandoEnLista && nodoRaiz.esPantallaDeDetalle()) {
+                Log.i(TAG_LOG, "Pantalla de detalle detectada desde un estado no relacionado. Forzando análisis.")
+                transicionarA(EstadoServicio.EnDetalleRevelando)
+                // No es necesario hacer más nada en este evento, el próximo se encargará con el nuevo estado.
+            }
+            // --- FIN DE LÓGICA GLOBAL ---
+
             when (estadoActual) {
                 is EstadoServicio.BuscandoEnLista -> gestionarEstadoBuscandoEnLista(evento, nodoRaiz)
                 is EstadoServicio.EsperandoAparicionDetalle -> gestionarEstadoEsperandoDetalle(evento, nodoRaiz)
@@ -131,6 +144,10 @@ class ServicioAccesibilidad : AccessibilityService() {
             return
         }
 
+        // DUMP DE NODOS AÑADIDO PARA DEPURACIÓN
+        Log.d(TAG_LOG, "Activando NodeDumper para la pantalla de DETALLE.")
+        AccessibilityNodeDumper.dumpNodes(nodoRaiz)
+
         if (evento?.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
             val siguienteEstado = ProcesadorDetalleViaje.procesar(nodoRaiz, configManager.configuracion) { tarifa ->
                 this.tarifaACalcular = tarifa
@@ -142,6 +159,11 @@ class ServicioAccesibilidad : AccessibilityService() {
     private fun gestionarEstadoEsperandoDialogo(evento: AccessibilityEvent?, nodoRaiz: AccessibilityNodeInfo) {
         if (evento?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || evento?.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
             Log.i(TAG_LOG, "Detectado cambio de ventana/contenido. Posible aparición de diálogo de tarifa.")
+            
+            // DUMP DE NODOS AÑADIDO PARA DEPURACIÓN
+            Log.d(TAG_LOG, "Activando NodeDumper para el DIÁLOGO DE OFERTA.")
+            AccessibilityNodeDumper.dumpNodes(nodoRaiz)
+
             transicionarA(EstadoServicio.EnDialogoTarifa)
             serviceScope.launch {
                 delay(500L) // Pequeña espera para que el diálogo se asiente

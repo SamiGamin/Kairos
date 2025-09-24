@@ -39,25 +39,34 @@ object ProcesadorDetalleViaje {
         Log.i(TAG_LOG, "[API] Distancia REAL (API): ${infoViaje.distanciaViajeRealKm?.toString() ?: "No disponible"} km")
         Log.i(TAG_LOG, "---------------------------------")
 
-        // Criterio 1: Descartar si la ganancia es menor a la mínima configurada
+        val distanciaDelViaje = infoViaje.distanciaViajeRealKm ?: infoViaje.distanciaEstimadaKm
+
+        // Criterio 1: Manejar viajes con ganancia menor a la mínima.
         if (infoViaje.precioSugeridoNumerico != null && infoViaje.precioSugeridoNumerico < configuracion.gananciaMinimaViaje) {
-            Log.w(
-                TAG_LOG,
-                "[DECISIÓN] Viaje descartado. La ganancia (${infoViaje.precioSugeridoNumerico}) es menor a la mínima configurada (${configuracion.gananciaMinimaViaje})."
-            )
-            return EstadoServicio.BuscandoEnLista
+            // Criterio especial: si el viaje es corto (< 5km), contraofertar con la ganancia mínima.
+            if (distanciaDelViaje != null && distanciaDelViaje < 5.0f) {
+                Log.i(TAG_LOG, "[DECISIÓN] Viaje con ganancia baja pero es < 5km. Contraofertando con la ganancia mínima.")
+                val contraofertaMinima = (Math.ceil(configuracion.gananciaMinimaViaje / 500.0) * 500).toInt().toString()
+                return intentarContraoferta(infoViaje, contraofertaMinima, onContraoferta)
+            } else {
+                // Si no cumple el criterio especial, se descarta.
+                Log.w(
+                    TAG_LOG,
+                    "[DECISIÓN] Viaje descartado. La ganancia (${infoViaje.precioSugeridoNumerico}) es menor a la mínima configurada (${configuracion.gananciaMinimaViaje}) y el viaje no es corto."
+                )
+                return EstadoServicio.BuscandoEnLista
+            }
         }
 
-        // Criterio 2: Calcular precio mínimo y decidir si aceptar o contraofertar
-        val distanciaParaCalculo = infoViaje.distanciaViajeRealKm ?: infoViaje.distanciaEstimadaKm
-        if (distanciaParaCalculo != null && distanciaParaCalculo > 0) {
-            val precioMinimoCalculado = distanciaParaCalculo * configuracion.gananciaPorKmDeseada
+        // Criterio 2: Calcular precio mínimo para viajes con ganancia aceptable o sin precio sugerido.
+        if (distanciaDelViaje != null && distanciaDelViaje > 0) {
+            val precioMinimoCalculado = distanciaDelViaje * configuracion.gananciaPorKmDeseada
             Log.i(
                 TAG_LOG,
                 "[CÁLCULO] Precio mínimo aceptable (basado en distancia de ${if (infoViaje.distanciaViajeRealKm != null) "API" else "UI"}): $precioMinimoCalculado"
             )
 
-            // Lógica de contraoferta
+            // Lógica de contraoferta estándar
             val contraoferta = (Math.ceil(precioMinimoCalculado / 500.0) * 500).toInt().toString()
             Log.i(TAG_LOG, "[DECISIÓN] Contraofertando (calculado): $contraoferta")
             
