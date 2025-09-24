@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Kairos</string>
+    <string name="app_name">KairosAst</string>
     <string name="descripcion_servicio_accesibilidad">Este servicio lee el texto de los elementos en la pantalla para mostrarlo en Logcat. Es una herramienta de aprendizaje y depuración.</string>
 
     <!-- Textos para la Actividad de Bienvenida -->

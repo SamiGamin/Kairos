@@ -16,8 +16,8 @@ android {
         applicationId = "com.kairos.ast"
         minSdk = 27
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = (project.findProperty("KAIROS_VERSION_CODE") as String?)?.toInt() ?: 1
+        versionName = project.findProperty("KAIROS_VERSION_NAME") as String? ?: "0.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val localProperties = gradleLocalProperties(rootDir, providers)
@@ -40,6 +40,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -49,7 +50,19 @@ android {
         viewBinding = true
         buildConfig = true
     }
+}
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            val appName = "KairosAst"
+            val versionName = project.findProperty("KAIROS_VERSION_NAME") as String? ?: "0.0.5"
+            val buildType = variant.buildType
 
+            val newApkName = "${appName}-v${versionName}-${buildType}.apk"
+            (output as? com.android.build.api.variant.impl.VariantOutputImpl)
+                ?.outputFileName?.set(newApkName)
+        }
+    }
 }
 
 dependencies {
@@ -81,7 +94,6 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json")
 
     // Supabase-KT (la versión más reciente)
-    implementation("io.github.jan-tennert.supabase:supabase-kt:3.2.3")
     implementation("io.github.jan-tennert.supabase:supabase-kt:3.2.3")
     implementation("io.github.jan-tennert.supabase:auth-kt:3.2.3")
     implementation("io.github.jan-tennert.supabase:postgrest-kt:3.2.3")
