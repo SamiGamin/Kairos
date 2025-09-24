@@ -11,6 +11,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.kairos.ast.R
 import com.kairos.ast.databinding.FragmentPerfilBinding
+import com.kairos.ast.servicios.utils.DateUtils
 import com.kairos.ast.ui.splash.SplashActivity
 
 class PerfilFragment : Fragment() {
@@ -32,7 +33,6 @@ class PerfilFragment : Fragment() {
         setupObservers()
         setupClickListeners()
     }
-
     private fun setupObservers() {
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
             binding.progressBar.visibility = if (state.isLoading) View.VISIBLE else View.GONE
@@ -44,11 +44,18 @@ class PerfilFragment : Fragment() {
                 // Cargar la información del plan
                 binding.tvPlanStatus.text = "Plan: ${usuario.tipo_plan.replaceFirstChar { it.titlecase() }}"
                 binding.estadoPlan.text = usuario.estado_plan
+
                 if (usuario.tipo_plan == "gratuito") {
-                    binding.tvPlanExpiry.text = "Vence en: ${usuario.dias_Plan} días"
+                    binding.tvPlanStatus.text = "Plan: ${usuario.tipo_plan.replaceFirstChar { it.titlecase() }}"
+                    val remainingDays = DateUtils.calculateRemainingDays(usuario.fecha_expiracion_plan)
+                    binding.tvPlanExpiry.text = "Vence en: $remainingDays días"
                     binding.tvPlanExpiry.visibility = View.VISIBLE
+
+                    val formattedDate = DateUtils.formatReadableDateTime(usuario.fecha_expiracion_plan)
+                    binding.tvfechaExpiracion.text = "Finaliza el: $formattedDate"
                 } else {
                     binding.tvPlanExpiry.visibility = View.GONE
+                    binding.tvfechaExpiracion.text = ""
                 }
             }
 

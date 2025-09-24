@@ -16,29 +16,22 @@ import com.kairos.ast.BuildConfig
 import com.kairos.ast.MainActivity
 import com.kairos.ast.R
 import com.kairos.ast.databinding.ActivitySplashBinding
-import com.kairos.ast.model.DeviceIdManager
 import com.kairos.ast.model.PlanManager
-import com.kairos.ast.model.SupabaseClient
+import com.kairos.ast.model.UserSessionValidator
+import com.kairos.ast.model.ValidationResult
 import com.kairos.ast.servicios.Versiones.UpdateManager
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.postgrest.from
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class SplashActivity : AppCompatActivity() {
 
     companion object {
-        private const val SPLASH_DELAY = 1500L
-        private const val TIMEOUT_DELAY = 10000L
+        private const val TIMEOUT_DELAY = 15000L
         private const val TAG = "SplashActivity"
     }
 
     private lateinit var binding: ActivitySplashBinding
     private val handler = Handler(Looper.getMainLooper())
-    private var verificationCompleted = false
-
-    private val coroutineScope = CoroutineScope(Dispatchers.Main)
+    private var flowCompleted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,113 +44,62 @@ class SplashActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        binding.tvVersion.text = "v${BuildConfig.VERSION_NAME}"
+
+        // --- INICIO DEL FLUJO SECUENCIAL ---
         lifecycleScope.launch {
             val updateManager = UpdateManager(this@SplashActivity)
             updateManager.checkForUpdates {
-                // Solo se ejecuta si no hay actualización
-                startActivity(Intent(this@SplashActivity, MainActivity::class.java))
-                finish()
+                Log.d(TAG, "App actualizada. Procediendo a validar sesión.")
+                // Llama al nuevo validador centralizado
+                lifecycleScope.launch {
+                    val result = UserSessionValidator.validate(this@SplashActivity)
+                    handleValidationResult(result)
+                }
             }
         }
+        // --- FIN DEL FLUJO SECUENCIAL ---
 
-        mostrarSplashInicial()
-
+        // Timeout de seguridad para todo el proceso de inicio
         handler.postDelayed({
-            verificarEstadoUsuario()
-        }, SPLASH_DELAY)
-
-        // Timeout de seguridad
-        handler.postDelayed({
-            if (!verificationCompleted) {
-                Log.w(TAG, "Timeout de verificación. Redirigiendo a LOGIN.")
+            if (!flowCompleted) {
+                Log.w(TAG, "Timeout de verificación general. Redirigiendo a LOGIN.")
                 irA("LOGIN")
             }
         }, TIMEOUT_DELAY)
     }
 
-    private fun mostrarSplashInicial() {
-       binding.tvVersion.text = "v${BuildConfig.VERSION_NAME}"
-
-    }
-
-    private fun verificarEstadoUsuario() {
-        coroutineScope.launch {
-            try {
-                val currentUser = SupabaseClient.client.auth.currentUserOrNull()
-
-                if (currentUser == null) {
-                    Log.d(TAG, "No hay usuario logueado. Navegando a LOGIN.")
-                    irA("LOGIN")
-                    return@launch
-                }
-
-                Log.d(TAG, "Usuario logueado: ID=${currentUser.id}, Email=${currentUser.email}")
-
-                val planStatus = PlanManager.verificarEstadoPlan(currentUser.id)
-                val deviceValid = verificarDispositivo(currentUser.id)
-
-                if (!deviceValid) {
-                    mostrarErrorDispositivo()
-                    return@launch
-                }
-
-                when (planStatus) {
-                    PlanManager.PlanStatus.FREE_TRIAL,
-                    PlanManager.PlanStatus.PAID -> {
-                        irA("MAIN") // Ir a la app normal si todo está bien
-                    }
-                    PlanManager.PlanStatus.EXPIRED -> {
-                        mostrarPlanExpirado(currentUser.id)
-                    }
-                    PlanManager.PlanStatus.ERROR -> {
-                        mostrarAppNormalConAdvertencia()
-                    }
-                }
-
-            } catch (e: Exception) {
-                Log.e(TAG, "Error al verificar el estado del usuario", e)
-                mostrarAppNormalConAdvertencia()
-            } finally {
-                verificationCompleted = true
+    /**
+     * Procesa el resultado del validador y navega a la pantalla correspondiente.
+     */
+    private fun handleValidationResult(result: ValidationResult) {
+        flowCompleted = true // Marcar que el flujo terminó para el timeout
+        when (result) {
+            is ValidationResult.Valid -> {
+                Log.d(TAG, "Validación exitosa. Navegando a MAIN.")
+                irA("MAIN")
+            }
+            is ValidationResult.NoUser -> {
+                Log.d(TAG, "Validación indica que no hay usuario. Navegando a LOGIN.")
+                irA("LOGIN")
+            }
+            is ValidationResult.DeviceNotValid -> {
+                Log.w(TAG, "Validación indica dispositivo no válido.")
+                mostrarErrorDispositivo()
+            }
+            is ValidationResult.PlanNotValid -> {
+                val message = if (result.status == PlanManager.PlanStatus.EXPIRED) "Tu plan ha expirado." else "No se pudo verificar tu plan."
+                Log.w(TAG, "Validación indica plan no válido: ${result.status}")
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                irA("MAIN") // Aún se permite el acceso
+            }
+            is ValidationResult.Error -> {
+                Log.e(TAG, "Error en la validación: ${result.message}")
+                Toast.makeText(this, "Modo offline - Error de conexión.", Toast.LENGTH_LONG).show()
+                irA("MAIN") // Fail-open
             }
         }
-    }
-
-    private suspend fun verificarDispositivo(userId: String): Boolean {
-        return try {
-            val deviceIdHash = DeviceIdManager.getSecureDeviceId(this)
-            val result = SupabaseClient.client
-                .from("dispositivos")
-                .select {
-                    filter {
-                        eq("device_id_hash", deviceIdHash)
-                        eq("usuario_id", userId)
-                    }
-                    limit(1)
-                }
-            !result.data.isNullOrBlank() && result.data != "[]"
-        } catch (e: Exception) {
-            Log.e(TAG, "Error al verificar el dispositivo.", e)
-            true // Fail-open en caso de error durante el splash
-        }
-    }
-
-    private fun mostrarAppNormalConAdvertencia() {
-        Toast.makeText(
-            this,
-            "Modo offline - Verificación de plan no disponible",
-            Toast.LENGTH_LONG
-        ).show()
-        irA("MAIN")
-    }
-
-    private fun mostrarPlanExpirado(userId: String) {
-        Toast.makeText(
-            this,
-            "Tu plan ha expirado - Por favor renueva",
-            Toast.LENGTH_LONG
-        ).show()
-        irA("MAIN")
     }
 
     private fun irA(destino: String) {
@@ -178,7 +120,7 @@ class SplashActivity : AppCompatActivity() {
                 contactarSoporte()
             }
             .setNegativeButton("Cerrar") { _, _ ->
-                finish()
+                finish() // Cierra la app
             }
             .setCancelable(false)
             .show()
@@ -196,6 +138,6 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeCallbacksAndMessages(null) // Limpiar el handler
+        handler.removeCallbacksAndMessages(null)
     }
 }

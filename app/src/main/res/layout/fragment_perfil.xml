@@ -71,7 +71,7 @@
                 android:padding="16dp">
 
                 <TextView
-                    android:id="@+id/textView"
+                    android:id="@+id/tvTipoPlan"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Estado del Plan"
@@ -86,7 +86,7 @@
                     android:text="Estado del Plan"
                     android:textAppearance="?attr/textAppearanceTitleMedium"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@+id/textView" />
+                    app:layout_constraintTop_toTopOf="@+id/tvTipoPlan" />
 
                 <TextView
                     android:id="@+id/tvPlanStatus"
@@ -94,8 +94,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
-                    app:layout_constraintStart_toStartOf="@+id/textView"
-                    app:layout_constraintTop_toBottomOf="@+id/textView"
+                    app:layout_constraintStart_toStartOf="@+id/tvTipoPlan"
+                    app:layout_constraintTop_toBottomOf="@+id/tvTipoPlan"
                     tools:text="Plan: Prueba Gratuita" />
 
                 <TextView
@@ -109,7 +109,20 @@
                     app:layout_constraintTop_toBottomOf="@+id/tvPlanStatus"
                     tools:text="Vence en: 14 días" />
 
+
+
+                <TextView
+                    android:id="@+id/tvfechaExpiracion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:inputType="datetime"
+                    android:text="fecha expiracion"
+                    app:layout_constraintStart_toStartOf="@+id/tvPlanExpiry"
+                    app:layout_constraintTop_toBottomOf="@+id/tvPlanExpiry" />
+
             </androidx.constraintlayout.widget.ConstraintLayout>
+
         </com.google.android.material.card.MaterialCardView>
 
         <!-- Acciones de la Cuenta -->
