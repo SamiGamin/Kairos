@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/md_theme_background"
     android:padding="32dp"
-    tools:context=".ui.bienbenida.Permisos">
+    tools:context=".ui.Permisos.Permisos">
 
     <!-- Logo/Icono de la app en la parte superior -->
     <ImageView

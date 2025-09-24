@@ -11,12 +11,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import com.kairos.ast.BuildConfig
 import com.kairos.ast.MainActivity
 import com.kairos.ast.R
 import com.kairos.ast.databinding.ActivitySplashBinding
 import com.kairos.ast.model.DeviceIdManager
 import com.kairos.ast.model.PlanManager
 import com.kairos.ast.model.SupabaseClient
+import com.kairos.ast.servicios.Versiones.UpdateManager
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.CoroutineScope
@@ -48,6 +51,14 @@ class SplashActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        lifecycleScope.launch {
+            val updateManager = UpdateManager(this@SplashActivity)
+            updateManager.checkForUpdates {
+                // Solo se ejecuta si no hay actualización
+                startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+                finish()
+            }
+        }
 
         mostrarSplashInicial()
 
@@ -65,7 +76,8 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun mostrarSplashInicial() {
-        // Lógica para mostrar el splash
+       binding.tvVersion.text = "v${BuildConfig.VERSION_NAME}"
+
     }
 
     private fun verificarEstadoUsuario() {

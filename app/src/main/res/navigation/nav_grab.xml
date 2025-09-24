@@ -58,7 +58,7 @@
     </fragment>
     <fragment
         android:id="@+id/permisosFragment"
-        android:name="com.kairos.ast.ui.bienbenida.PermisosFragment"
+        android:name="com.kairos.ast.ui.Permisos.PermisosFragment"
         android:label="PermisosFragment"
         tools:layout="@layout/diseno_actividad_bienvenida" >
         <action

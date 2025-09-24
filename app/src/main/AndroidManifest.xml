@@ -30,7 +30,7 @@
             </intent-filter>
         </activity> <!-- Actividad Principal (Ya no es la de inicio) -->
         <activity
-            android:name=".ui.bienbenida.Permisos"
+            android:name=".ui.Permisos.Permisos"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden" />
         <service

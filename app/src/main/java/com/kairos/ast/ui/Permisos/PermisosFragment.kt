@@ -1,4 +1,4 @@
-package com.kairos.ast.ui.bienbenida
+package com.kairos.ast.ui.Permisos
 
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ComponentName
