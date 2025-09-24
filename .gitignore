@@ -1,18 +1,24 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
+# Archivos de Build generados
 /build
-/captures
+.gradle
+
+# Archivos de Configuración Local y Sensibles
+# ¡NUNCA subas este archivo! Contiene la ruta del SDK y las claves de API.
+/local.properties
+gha-creds-*.json
+
+# Archivos de IDE (Android Studio)
+*.iml
+.idea/
+.DS_Store
+
+# Archivos de compilación nativa
 .externalNativeBuild
 .cxx
-local.properties
 
+# Archivos de profiling y logs
+/captures
+*.log
+
+# Archivos específicos de herramientas (Gemini, etc.)
 .gemini/
-gha-creds-*.json
