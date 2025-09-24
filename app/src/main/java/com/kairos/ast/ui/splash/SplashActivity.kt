@@ -77,7 +77,8 @@ class SplashActivity : AppCompatActivity() {
         flowCompleted = true // Marcar que el flujo terminó para el timeout
         when (result) {
             is ValidationResult.Valid -> {
-                Log.d(TAG, "Validación exitosa. Navegando a MAIN.")
+                // La validación es exitosa, no importa si es admin o no para la navegación inicial.
+                Log.d(TAG, "Validación exitosa (isAdmin: ${result.isAdmin}). Navegando a MAIN.")
                 irA("MAIN")
             }
             is ValidationResult.NoUser -> {

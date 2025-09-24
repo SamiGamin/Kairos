@@ -87,4 +87,9 @@
         android:name="com.kairos.ast.ui.planes.PlanesFragment"
         android:label="fragment_planes"
         tools:layout="@layout/fragment_planes" />
+    <fragment
+        android:id="@+id/adminFragment"
+        android:name="com.kairos.ast.ui.admin.AdminFragment"
+        android:label="fragment_admin"
+        tools:layout="@layout/fragment_admin" />
 </navigation>

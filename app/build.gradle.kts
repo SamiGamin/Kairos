@@ -25,7 +25,7 @@ android {
         buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL")}\"")
         buildConfigField("String", "SUPABASE_KEY", "\"${localProperties.getProperty("SUPABASE_KEY")}\"")
         buildConfigField("String", "GOOGLE_MAPS_API_KEY", "\"${localProperties.getProperty("GOOGLE_MAPS_API_KEY")}\"")
-
+        buildConfigField ("String", "WHATSAPP_NUMBER", "\"${localProperties.getProperty("WHATSAPP_NUMBER")}\"")
 
 
 
@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.swiperefreshlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -98,6 +99,8 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:auth-kt:3.2.3")
     implementation("io.github.jan-tennert.supabase:postgrest-kt:3.2.3")
     implementation("io.github.jan-tennert.supabase:storage-kt-android:3.2.3")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:3.2.3")
+
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 

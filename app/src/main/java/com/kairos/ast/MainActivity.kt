@@ -11,6 +11,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import com.kairos.ast.databinding.ActivityMainBinding
+import com.kairos.ast.model.UserRoleManager
 
 class MainActivity : AppCompatActivity() {
 
@@ -46,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         }
         configurarNavegacion()
         setupPlanObservers()
+        setupAdminMenu() // Comprueba y configura el menú de admin
     }
 
     private fun configurarNavegacion() {
@@ -56,8 +58,6 @@ class MainActivity : AppCompatActivity() {
         // Navegación condicional basada en el Intent de SplashActivity
         val startDestination = intent.getStringExtra("START_DESTINATION")
         if (startDestination == "LOGIN") {
-            // Usamos NavOptions para limpiar el backstack y que el usuario no pueda volver
-            // al fragmento principal (que no debería ver) con el botón de atrás.
             val navOptions = NavOptions.Builder()
                 .setPopUpTo(navController.graph.startDestinationId, true)
                 .build()
@@ -70,19 +70,21 @@ class MainActivity : AppCompatActivity() {
             val menu = binding.vistaNavegacionInferior.menu
             val isPlanActive = usuario != null && usuario.estado_plan == "activo"
 
-            // Deshabilitar funciones si el plan no está activo
-            menu.findItem(R.id.fragmentoIndrive)?.isEnabled = isPlanActive
-            menu.findItem(R.id.permisosFragment)?.isEnabled = isPlanActive
+            // Ocultar funciones si el plan no está activo para una UI más limpia
+            menu.findItem(R.id.fragmentoIndrive)?.isVisible = isPlanActive
+            menu.findItem(R.id.permisosFragment)?.isVisible = isPlanActive
 
             // El perfil siempre está habilitado para poder gestionar la cuenta
             menu.findItem(R.id.perfilFragment)?.isEnabled = true
-
-            // Opcional: Mostrar un mensaje si el usuario intenta acceder a una función deshabilitada
-            binding.vistaNavegacionInferior.setOnItemReselectedListener { item ->
-                if (!item.isEnabled) {
-                    Toast.makeText(this, "Esta función requiere un plan activo.", Toast.LENGTH_SHORT).show()
-                }
-            }
         }
+    }
+
+    /**
+     * Comprueba el rol del usuario y muestra u oculta el menú de administración.
+     */
+    private fun setupAdminMenu() {
+        val menu = binding.vistaNavegacionInferior.menu
+        val adminMenuItem = menu.findItem(R.id.adminFragment)
+        adminMenuItem?.isVisible = UserRoleManager.isAdmin(this)
     }
 }

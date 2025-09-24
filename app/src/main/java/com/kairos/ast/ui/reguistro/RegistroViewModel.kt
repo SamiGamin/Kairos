@@ -29,6 +29,8 @@ class RegistroViewModel : ViewModel() {
 
     companion object {
         private const val DIAS_PRUEBA_GRATUITA = 3
+        // IMPORTANTE: Cambia este email por tu email de administrador
+        private const val ADMIN_EMAIL = "salito1405@gmail.com"
     }
 
     fun realizarRegistro(
@@ -55,7 +57,10 @@ class RegistroViewModel : ViewModel() {
                 val user = SupabaseClient.client.auth.currentUserOrNull()
                     ?: throw Exception("No se pudo obtener el usuario recién creado")
 
-                // 3. Crear el objeto Usuario para la base de datos
+                // 3. Asignar rol basado en el email
+                val userRole = if (emailInput.equals(ADMIN_EMAIL, ignoreCase = true)) "admin" else "usuario"
+
+                // 4. Crear el objeto Usuario para la base de datos
                 val ahora = Instant.now()
                 val expiracion = ahora.plus(DIAS_PRUEBA_GRATUITA.toLong(), ChronoUnit.DAYS)
                 val nuevoUsuario = Usuario(
@@ -63,6 +68,7 @@ class RegistroViewModel : ViewModel() {
                     email = emailInput,
                     nombre = nombre,
                     telefono = if (telefono.isNotEmpty()) telefono else null,
+                    rol = userRole, // Rol asignado
                     tipo_plan = "gratuito",
                     estado_plan = "activo",
                     dias_Plan = DIAS_PRUEBA_GRATUITA,
@@ -71,13 +77,13 @@ class RegistroViewModel : ViewModel() {
                     fecha_expiracion_plan = expiracion
                 )
 
-                // 4. Insertar usuario en la tabla 'usuarios'
+                // 5. Insertar usuario en la tabla 'usuarios'
                 SupabaseClient.client.from("usuarios").insert(nuevoUsuario)
 
-                // 5. Registrar el dispositivo
+                // 6. Registrar el dispositivo
                 DeviceIdManager.registrarDispositivo(deviceIdHash, user.id)
 
-                // 6. Notificar éxito
+                // 7. Notificar éxito
                 _registroState.postValue(RegistroState.Success)
 
             } catch (e: Exception) {

@@ -102,7 +102,7 @@ class LoginFragment : Fragment() {
         showLoading(false)
         when (result) {
             is ValidationResult.Valid -> {
-                Log.d("LoginFragment", "Validación exitosa. Navegando a MAIN.")
+                Log.d("LoginFragment", "Validación exitosa (isAdmin: ${result.isAdmin}). Navegando a MAIN.")
                 irA("MAIN")
             }
             is ValidationResult.DeviceNotValid -> {

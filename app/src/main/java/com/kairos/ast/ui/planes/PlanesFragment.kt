@@ -1,5 +1,7 @@
 package com.kairos.ast.ui.planes
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -26,18 +28,53 @@ class PlanesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
+        observeViewModel()
     }
 
     private fun setupClickListeners() {
         binding.btnSeleccionarMensual.setOnClickListener {
-            // Lógica para seleccionar el plan mensual
-            Toast.makeText(requireContext(), "Has seleccionado el Plan Mensual", Toast.LENGTH_SHORT).show()
+            viewModel.onPlanSelected("Plan Mensual")
         }
 
         binding.btnSeleccionarAnual.setOnClickListener {
-            // Lógica para seleccionar el plan anual
-            Toast.makeText(requireContext(), "Has seleccionado el Plan Anual", Toast.LENGTH_SHORT).show()
+            viewModel.onPlanSelected("Plan Anual")
         }
+    }
+
+    private fun observeViewModel() {
+        viewModel.event.observe(viewLifecycleOwner) { event ->
+            when (event) {
+                is PlanEvent.OpenWhatsApp -> {
+                    openWhatsApp(event.url)
+                    showConfirmationToast()
+                }
+                is PlanEvent.ShowError -> {
+                    Toast.makeText(requireContext(), event.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun openWhatsApp(url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse(url)
+                setPackage("com.whatsapp") // Intenta abrir WhatsApp directamente
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            // Fallback si WhatsApp no está instalado
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                startActivity(intent)
+            } catch (e2: Exception) {
+                Toast.makeText(requireContext(), "No se pudo abrir WhatsApp ni un navegador.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun showConfirmationToast() {
+        Toast.makeText(requireContext(), "Serás redirigido a WhatsApp para completar tu solicitud.", Toast.LENGTH_LONG).show()
     }
 
     override fun onDestroyView() {
