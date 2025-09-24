@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/tvDialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gestionar Plan de Usuario"
+        android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+
+    <TextView
+        android:id="@+id/tvDialogUserEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="usuario@ejemplo.com"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+    <!-- Dropdown para seleccionar el plan -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/menuTipoPlan"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Tipo de Plan">
+
+        <AutoCompleteTextView
+            android:id="@+id/autoCompletePlan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Campo para la fecha de expiración -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilFechaExpiracion"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Fecha de Expiración">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etFechaExpiracion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableEnd="@drawable/ic_menu_settings" 
+            android:drawableTint="?attr/colorOnSurfaceVariant"
+            android:focusable="false"
+            android:cursorVisible="false" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+    
+    <!-- Campo para el motivo (opcional) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilMotivo"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Motivo del cambio (opcional)">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etMotivo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>

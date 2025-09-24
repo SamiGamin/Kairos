@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:drawablePadding="12dp"
+    android:gravity="center_vertical"
+    android:textAppearance="?attr/textAppearanceBodyMedium"
+    app:drawableStartCompat="@drawable/ic_check_circle"
+    tools:text="Una característica increíble" />

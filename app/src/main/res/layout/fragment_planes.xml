@@ -1,150 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/md_theme_background"
-    android:fillViewport="true"
+    android:background="?attr/colorSurfaceContainerLowest"
+    android:orientation="vertical"
     tools:context=".ui.planes.PlanesFragment"
-    android:padding="24dp">
+    android:padding="16dp">
 
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingBottom="24dp">
 
-        <!-- Header -->
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:gravity="center"
-            android:paddingBottom="32dp">
+            android:text="Elige tu Plan"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="@color/md_theme_onBackground"
+            android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Elige tu Plan"
-                android:textAppearance="?attr/textAppearanceHeadlineMedium"
-                android:textColor="@color/md_theme_onBackground"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:text="Selecciona la suscripción que mejor se adapte a ti."
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="@color/md_theme_onSurfaceVariant" />
-
-        </LinearLayout>
-
-        <!-- Plan Mensual -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardPlanMensual"
-            style="@style/Widget.Material3.CardView.Elevated"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Plan Mensual"
-                    android:textAppearance="?attr/textAppearanceTitleLarge"
-                    android:textStyle="bold"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="$10.00 / mes"
-                    android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                    android:textColor="?attr/colorPrimary"
-                    android:layout_marginTop="4dp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="• Acceso completo a todas las funciones\n• Soporte prioritario por email\n• Actualizaciones constantes"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSeleccionarMensual"
-                    style="@style/Widget.Material3.Button.OutlinedButton.Icon"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:text="Seleccionar Plan"/>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Plan Anual -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardPlanAnual"
-            style="@style/Widget.Material3.CardView.Outlined"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="Plan Anual"
-                        android:textAppearance="?attr/textAppearanceTitleLarge"
-                        android:textStyle="bold"/>
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Más Popular"
-                        app:chipBackgroundColor="?attr/colorPrimaryContainer" />
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="$100.00 / año"
-                    android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                    android:textColor="?attr/colorPrimary"
-                    android:layout_marginTop="4dp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="• Todos los beneficios del plan mensual\n• Ahorra un 17% en comparación\n• Acceso anticipado a nuevas funciones"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSeleccionarAnual"
-                    style="@style/Widget.Material3.Button.OutlinedButton.Icon"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:text="Seleccionar Plan"/>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Selecciona la suscripción que mejor se adapte a ti."
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="@color/md_theme_onSurfaceVariant" />
 
     </LinearLayout>
-</ScrollView>
+
+    <!-- RecyclerView para mostrar los planes dinámicamente -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvPlanes"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/item_plan" />
+
+</LinearLayout>

@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kairos.ast.model.SupabaseClient
 import com.kairos.ast.model.Usuario
-import io.github.jan.supabase.postgrest.from
+import kotlinx.serialization.json.JsonPrimitive
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc // Import para RPC
 import kotlinx.coroutines.launch
@@ -51,21 +51,25 @@ class AdminViewModel : ViewModel() {
 
 
 
-    fun updateUserPlan(userId: String, tipoPlan: String, fechaExpiracion: Instant) {
+
+    fun updateUserPlan(userId: String, tipoPlan: String, fechaExpiracion: Instant, motivo: String = "admin") {
         viewModelScope.launch {
             try {
-                SupabaseClient.client.from("usuarios")
-                    .update({
-                        set("tipo_plan", tipoPlan)
-                        set("estado_plan", "activo") // Se reactiva el plan al actualizar
-                        set("fecha_expiracion_plan", fechaExpiracion)
-                    }) {
-                        filter {
-                            eq("id", userId)
-                        }
+                // 👇 Aquí se llama al RPC de Postgres
+                SupabaseClient.client.postgrest.rpc(
+                    "update_user_plan",
+                    buildJsonObject {
+                        put("user_id", JsonPrimitive(userId))
+                        put("nuevo_plan", JsonPrimitive(tipoPlan))
+                        put("nueva_fecha_expiracion", JsonPrimitive(fechaExpiracion.toString()))
+                        put("motivo", JsonPrimitive(motivo))
                     }
+                )
+
+                // Si no lanza excepción, se considera éxito
                 _updateResult.postValue(Result.success(Unit))
-                // Refrescar la lista de usuarios después de una actualización exitosa
+
+                // Refrescar usuarios después de actualizar plan
                 fetchUsers()
             } catch (e: Exception) {
                 Log.e("AdminViewModel", "Error al actualizar el plan", e)

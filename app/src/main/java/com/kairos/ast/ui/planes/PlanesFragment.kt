@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.kairos.ast.databinding.FragmentPlanesBinding
 
 class PlanesFragment : Fragment() {
@@ -16,6 +17,7 @@ class PlanesFragment : Fragment() {
     private var _binding: FragmentPlanesBinding? = null
     private val binding get() = _binding!!
     private val viewModel: PlanesViewModel by viewModels()
+    private lateinit var planesAdapter: PlanesAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,21 +29,28 @@ class PlanesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupClickListeners()
+        setupRecyclerView()
         observeViewModel()
     }
 
-    private fun setupClickListeners() {
-        binding.btnSeleccionarMensual.setOnClickListener {
-            viewModel.onPlanSelected("Plan Mensual")
+    private fun setupRecyclerView() {
+        // El listener del adaptador ahora llama al método del ViewModel
+        planesAdapter = PlanesAdapter { selectedPlan ->
+            viewModel.onPlanSelected(selectedPlan.name)
         }
-
-        binding.btnSeleccionarAnual.setOnClickListener {
-            viewModel.onPlanSelected("Plan Anual")
+        binding.rvPlanes.apply {
+            adapter = planesAdapter
+            layoutManager = LinearLayoutManager(context)
         }
     }
 
     private fun observeViewModel() {
+        // Observador para la lista de planes
+        viewModel.plans.observe(viewLifecycleOwner) { plans ->
+            planesAdapter.submitList(plans)
+        }
+
+        // Observador para los eventos (abrir WhatsApp, mostrar errores)
         viewModel.event.observe(viewLifecycleOwner) { event ->
             when (event) {
                 is PlanEvent.OpenWhatsApp -> {

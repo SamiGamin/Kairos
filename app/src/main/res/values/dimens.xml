@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="card_popular_stroke_width">2dp</dimen>
+    <dimen name="card_normal_stroke_width">1dp</dimen>
+    <dimen name="button_outline_stroke_width">1dp</dimen>
+</resources>

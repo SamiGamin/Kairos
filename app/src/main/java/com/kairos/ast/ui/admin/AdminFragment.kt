@@ -4,17 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
 import android.widget.Toast
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.google.android.material.datepicker.MaterialDatePicker
 import com.kairos.ast.databinding.FragmentAdminBinding
 import com.kairos.ast.model.Usuario
 import java.time.Instant
-import java.time.ZoneOffset
 
 class AdminFragment : Fragment() {
 
@@ -36,6 +31,7 @@ class AdminFragment : Fragment() {
         setupRecyclerView()
         setupSwipeToRefresh()
         observeViewModel()
+        setupFragmentResultListener() // Escucha los resultados del diálogo
     }
 
     private fun setupRecyclerView() {
@@ -72,27 +68,30 @@ class AdminFragment : Fragment() {
         }
     }
 
-    private fun showManagePlanDialog(usuario: Usuario) {
-        // Inflar el layout del diálogo (necesitamos crearlo)
-        // Por ahora, usaremos un diálogo simple de Material
-        val planOptions = arrayOf("Gratuito", "Mensual", "Anual")
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, planOptions)
+    /**
+     * Configura el listener para recibir datos desde el ManagePlanDialogFragment.
+     */
+    private fun setupFragmentResultListener() {
+        childFragmentManager.setFragmentResultListener(ManagePlanDialogFragment.REQUEST_KEY, viewLifecycleOwner) { _, bundle ->
+            val userId = bundle.getString("userId")
+            val newPlan = bundle.getString("newPlan")
+            val newExpirationMillis = bundle.getLong("newExpiration")
 
-        // Lógica para mostrar un diálogo y actualizar
-        // Esto es un placeholder, idealmente se haría con un layout custom
-        val selectedPlan = "Mensual" // Placeholder
-
-        val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setTitleText("Seleccionar fecha de expiración")
-            .setSelection(Instant.now().toEpochMilli())
-            .build()
-
-        datePicker.addOnPositiveButtonClickListener { selection ->
-            val newExpiration = Instant.ofEpochMilli(selection)
-            viewModel.updateUserPlan(usuario.id, selectedPlan.lowercase(), newExpiration)
+            if (userId != null && newPlan != null && newExpirationMillis > 0) {
+                val newExpiration = Instant.ofEpochMilli(newExpirationMillis)
+                viewModel.updateUserPlan(userId, newPlan, newExpiration)
+            } else {
+                Toast.makeText(requireContext(), "No se recibieron datos para actualizar.", Toast.LENGTH_SHORT).show()
+            }
         }
+    }
 
-        datePicker.show(childFragmentManager, "DATE_PICKER")
+    /**
+     * Muestra el diálogo de gestión de planes para un usuario específico.
+     */
+    private fun showManagePlanDialog(usuario: Usuario) {
+        val dialog = ManagePlanDialogFragment.newInstance(usuario)
+        dialog.show(childFragmentManager, ManagePlanDialogFragment.TAG)
     }
 
     override fun onDestroyView() {
