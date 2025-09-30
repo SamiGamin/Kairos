@@ -5,6 +5,8 @@ import com.kairos.ast.model.SupabaseClient
 
 class MainApplication : Application() {
 
+
+
     override fun onCreate() {
         super.onCreate()
         val client = SupabaseClient.client

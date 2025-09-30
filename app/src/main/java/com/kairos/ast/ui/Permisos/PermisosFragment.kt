@@ -4,7 +4,10 @@ import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -25,9 +29,7 @@ class PermisosFragment : Fragment() {
     private var _binding: DisenoActividadBienvenidaBinding? = null
     private val binding get() = _binding!!
 
-    // Obtener el ViewModel compartido de la Activity
     private val mainViewModel: MainViewModel by activityViewModels()
-
     private val TAG_LOGCAT_PERMISOS = "KairosPermisosFragment"
 
     override fun onCreateView(
@@ -40,27 +42,66 @@ class PermisosFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // Notificar al ViewModel principal que actualice el estado del usuario.
-        // Esto hará que la MainActivity observe el cambio y actualice los menús.
         mainViewModel.actualizarEstadoUsuario()
-
         configurarListeners()
     }
 
     override fun onResume() {
         super.onResume()
-        Log.d(TAG_LOGCAT_PERMISOS, "onResume: Verificando estado del servicio de accesibilidad.")
-        verificarEstadoServicioAccesibilidad()
+        actualizarEstadosPermisos()
     }
 
     private fun configurarListeners() {
         binding.botonIrAAjustesAccesibilidad.setOnClickListener {
             abrirAjustesAccesibilidad()
         }
-
+        binding.botonIrAAjustesBateria.setOnClickListener {
+            abrirAjustesOptimizacionBateria()
+        }
         binding.botonContinuarAPrincipal.setOnClickListener {
             findNavController().navigate(R.id.action_permisosFragment_to_fragmentoIndrive)
+        }
+        binding.botonIrAAjustesAutoinicio.setOnClickListener {
+            abrirAjustesAutoinicio(context = requireContext())
+        }
+
+    }
+    private fun abrirAjustesAutoinicio(context: Context) {
+        val intents = listOf(
+            Intent().setComponent(ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity")),
+            Intent().setComponent(ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity")),
+            Intent().setComponent(ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity")),
+            Intent().setComponent(ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity")),
+            Intent().setComponent(ComponentName("com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity")),
+            Intent().setComponent(ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity")),
+            Intent().setComponent(ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity")),
+            Intent().setComponent(ComponentName("com.asus.mobilemanager", "com.asus.mobilemanager.entry.FunctionActivity")).setData(Uri.parse("mobilemanager://function/entry/AutoStart"))
+        )
+
+        var didSucceed = false
+        for (intent in intents) {
+            try {
+                context.startActivity(intent)
+                didSucceed = true
+                break
+            } catch (e: Exception) {
+                // El intent no funcionó en este dispositivo
+            }
+        }
+
+        if (!didSucceed) {
+            Toast.makeText(context, "No se pudo abrir la pantalla de auto-inicio automáticamente. Búscala manualmente en los ajustes de tu dispositivo.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun actualizarEstadosPermisos() {
+        val accesibilidadOk = verificarEstadoServicioAccesibilidad()
+        val bateriaOk = verificarEstadoOptimizacionBateria()
+
+        if (accesibilidadOk && bateriaOk) {
+            binding.botonContinuarAPrincipal.visibility = View.VISIBLE
+        } else {
+            binding.botonContinuarAPrincipal.visibility = View.GONE
         }
     }
 
@@ -70,73 +111,85 @@ class PermisosFragment : Fragment() {
         Toast.makeText(requireContext(), "Por favor, busca y activa el servicio \"Kairos\".", Toast.LENGTH_LONG).show()
     }
 
-    private fun verificarEstadoServicioAccesibilidad() {
-        if (estaServicioAccesibilidadActivado(requireContext())) {
-            Log.i(TAG_LOGCAT_PERMISOS, "Servicio de Accesibilidad Kairos VERIFICADO como ACTIVO.")
-            binding.botonIrAAjustesAccesibilidad.isEnabled = false
-            binding.botonIrAAjustesAccesibilidad.text = "Servicio de Accesibilidad Activado"
-            binding.botonContinuarAPrincipal.visibility = View.VISIBLE
+    private fun abrirAjustesOptimizacionBateria() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            intent.data = Uri.parse("package:${requireContext().packageName}")
+            startActivity(intent)
         } else {
-            Log.w(TAG_LOGCAT_PERMISOS, "Servicio de Accesibilidad Kairos VERIFICADO como INACTIVO.")
+            Toast.makeText(requireContext(), "Función no disponible en esta versión de Android.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun verificarEstadoServicioAccesibilidad(): Boolean {
+        val activado = estaServicioAccesibilidadActivado(requireContext())
+        if (activado) {
+            binding.textoEstadoPermiso.text = "Estado: Activado"
+            binding.textoEstadoPermiso.setTextColor(ContextCompat.getColor(requireContext(), R.color.md_theme_primary))
+            binding.botonIrAAjustesAccesibilidad.isEnabled = false
+            binding.botonIrAAjustesAccesibilidad.text = "Servicio Activado"
+            binding.textoExplicacionAdicionalPermisos.visibility = View.GONE
+        } else {
+            binding.textoEstadoPermiso.text = "Estado: Pendiente"
+            binding.textoEstadoPermiso.setTextColor(ContextCompat.getColor(requireContext(), R.color.md_theme_error))
             binding.botonIrAAjustesAccesibilidad.isEnabled = true
             binding.botonIrAAjustesAccesibilidad.text = getString(R.string.boton_activar_servicio_accesibilidad)
-            binding.botonContinuarAPrincipal.visibility = View.GONE
+            binding.textoExplicacionAdicionalPermisos.visibility = View.VISIBLE
         }
+        return activado
+    }
+
+    private fun verificarEstadoOptimizacionBateria(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val powerManager = requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager
+            val packageName = requireContext().packageName
+            val sinRestricciones = powerManager.isIgnoringBatteryOptimizations(packageName)
+
+            if (sinRestricciones) {
+                binding.cardBateria.visibility = View.VISIBLE
+                binding.textoEstadoBateria.text = "Estado: Optimización activada"
+                binding.textoEstadoBateria.setTextColor(ContextCompat.getColor(requireContext(), R.color.md_theme_primary))
+                binding.botonIrAAjustesBateria.isEnabled = false
+            } else {
+                binding.cardBateria.visibility = View.VISIBLE
+                binding.textoEstadoBateria.text =  "Estado: Optimización desactivada"
+                binding.textoEstadoBateria.setTextColor(ContextCompat.getColor(requireContext(), R.color.md_theme_error))
+                binding.botonIrAAjustesBateria.isEnabled = true
+            }
+            return sinRestricciones
+        }
+        return true // Para versiones antiguas de Android, asumimos que no hay problema.
     }
 
     private fun estaServicioAccesibilidadActivado(context: Context): Boolean {
         val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        val listaServiciosHabilitados = accessibilityManager.getEnabledAccessibilityServiceList(
-            AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+        val listaServiciosHabilitados = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
 
-        val nuestroPaquetePrincipal = context.packageName
-        val nuestraClaseServicioCompleta = ServicioAccesibilidad::class.java.name
-        Log.d(TAG_LOGCAT_PERMISOS, "Buscando servicio con Paquete Principal: '${nuestroPaquetePrincipal}', Clase Completa Esperada: '${nuestraClaseServicioCompleta}'")
+        // Forma 1: Nombre completo (oficial)
+        val componentNameOficial = ComponentName(context, ServicioAccesibilidad::class.java)
+        val idOficial = componentNameOficial.flattenToString()
 
-        if (listaServiciosHabilitados.isNullOrEmpty()) {
-            Log.w(TAG_LOGCAT_PERMISOS, "No hay servicios de accesibilidad habilitados en el sistema.")
-            return false
+        // Forma 2: Nombre abreviado (visto en algunos dispositivos)
+        val shortClassName = ServicioAccesibilidad::class.java.name.substring(context.packageName.length)
+        val idAlternativo = context.packageName + "/" + shortClassName
+
+        Log.d(TAG_LOGCAT_PERMISOS, "Buscando servicio con ID Oficial: $idOficial")
+        Log.d(TAG_LOGCAT_PERMISOS, "Buscando servicio con ID Alternativo: $idAlternativo")
+        Log.d(TAG_LOGCAT_PERMISOS, "Lista de servicios de accesibilidad ACTIVOS:")
+        if (listaServiciosHabilitados.isEmpty()) {
+            Log.d(TAG_LOGCAT_PERMISOS, "- (Ninguno)")
         }
 
-        Log.d(TAG_LOGCAT_PERMISOS, "Servicios de accesibilidad HABILITADOS actualmente en el sistema (${listaServiciosHabilitados.size}):")
-        for (servicioHabilitadoInfo in listaServiciosHabilitados) {
-            val idServicioSistema = servicioHabilitadoInfo.id
-            if (idServicioSistema.isNullOrEmpty()) {
-                Log.w(TAG_LOGCAT_PERMISOS, " - Se encontró un servicio habilitado con ID nulo o vacío.")
-                continue
-            }
-
-            val componenteServicioSistema = ComponentName.unflattenFromString(idServicioSistema)
-            if (componenteServicioSistema == null) {
-                Log.w(TAG_LOGCAT_PERMISOS, " - No se pudo crear ComponentName desde ID del sistema: '${idServicioSistema}'")
-                continue
-            }
-
-            val paqueteDetectadoSistema = componenteServicioSistema.packageName
-            val claseDetectadaSistema = componenteServicioSistema.className
-
-            Log.d(TAG_LOGCAT_PERMISOS, " - Servicio del sistema detectado: Paquete='${paqueteDetectadoSistema}', Clase='${claseDetectadaSistema}' (ID Original del sistema: '${idServicioSistema}')")
-
-            if (nuestroPaquetePrincipal.equals(paqueteDetectadoSistema, ignoreCase = true)) {
-                val claseNormalizadaSistema: String
-                if (claseDetectadaSistema.startsWith(".")) {
-                    claseNormalizadaSistema = paqueteDetectadoSistema + claseDetectadaSistema
-                    Log.d(TAG_LOGCAT_PERMISOS, "   Clase del sistema normalizada a absoluta: '${claseNormalizadaSistema}'")
-                } else {
-                    claseNormalizadaSistema = claseDetectadaSistema
-                }
-
-                if (nuestraClaseServicioCompleta.equals(claseNormalizadaSistema, ignoreCase = true)) {
-                    Log.i(TAG_LOGCAT_PERMISOS, "¡Coincidencia DEFINITIVA encontrada! Servicio Kairos está activo. Paquete='${paqueteDetectadoSistema}', Clase Normalizada='${claseNormalizadaSistema}'")
-                    return true
-                } else {
-                    Log.d(TAG_LOGCAT_PERMISOS, "   Clases no coinciden: Esperada='${nuestraClaseServicioCompleta}', Sistema Normalizada='${claseNormalizadaSistema}'")
-                }
-            } else {
-                 Log.d(TAG_LOGCAT_PERMISOS, "   Paquetes no coinciden: Esperado='${nuestroPaquetePrincipal}', Sistema='${paqueteDetectadoSistema}'")
+        for (servicioHabilitado in listaServiciosHabilitados) {
+            val idServicioActual = servicioHabilitado.id
+            Log.d(TAG_LOGCAT_PERMISOS, "- ID: $idServicioActual")
+            if (idServicioActual.equals(idOficial, ignoreCase = true) || idServicioActual.equals(idAlternativo, ignoreCase = true)) {
+                Log.i(TAG_LOGCAT_PERMISOS, "¡Servicio ENCONTRADO!")
+                return true
             }
         }
-        Log.d(TAG_LOGCAT_PERMISOS, "No se encontró el servicio Kairos (Paquete='${nuestroPaquetePrincipal}', Clase Completa='${nuestraClaseServicioCompleta}') en la lista de servicios habilitados.")
+
+        Log.w(TAG_LOGCAT_PERMISOS, "Servicio NO encontrado en la lista de activos.")
         return false
     }
 
