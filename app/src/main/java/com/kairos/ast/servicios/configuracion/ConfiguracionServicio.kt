@@ -11,5 +11,6 @@ data class ConfiguracionServicio(
     val filtrarPorCalificacion: Boolean,
     val minCalificacion: Float,
     val filtrarPorNumeroDeViajes: Boolean,
-    val minViajes: Int
+    val minViajes: Int,
+    val accionesAutomaticas: Boolean
 )

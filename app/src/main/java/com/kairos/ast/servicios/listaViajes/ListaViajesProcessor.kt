@@ -31,6 +31,12 @@ object ListaViajesProcessor {
         nodoRaiz: AccessibilityNodeInfo,
         config: ConfiguracionServicio
     ): AccessibilityNodeInfo? {
+        // Si las acciones automáticas están desactivadas, no buscar nada.
+        if (!config.accionesAutomaticas) {
+            Log.i(TAG_LOG, "Búsqueda de viajes omitida: las acciones automáticas están desactivadas.")
+            return null
+        }
+
         val contenedoresViaje = encontrarContenedoresDeViaje(nodoRaiz)
         Log.d(TAG_LOG, "Se encontraron ${contenedoresViaje.size} posibles contenedores de viaje.")
 

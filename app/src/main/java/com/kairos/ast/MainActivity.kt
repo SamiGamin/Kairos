@@ -36,6 +36,10 @@ class MainActivity : AppCompatActivity() {
         const val CLAVE_MIN_VIAJES = "minViajes"
         const val VALOR_POR_DEFECTO_MIN_VIAJES = 100
 
+        // Clave para acciones automáticas
+        const val CLAVE_ACCIONES_AUTOMATICAS = "accionesAutomaticas"
+        const val VALOR_POR_DEFECTO_ACCIONES_AUTOMATICAS = true
+
         const val ACCION_ACTUALIZAR_CONFIGURACION = "com.kairos.ast.ACCION_ACTUALIZAR_CONFIGURACION"
 
     }

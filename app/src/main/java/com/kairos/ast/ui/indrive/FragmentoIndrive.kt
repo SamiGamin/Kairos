@@ -99,6 +99,13 @@ class FragmentoIndrive : Fragment() {
 
         actualizarEstadoUiFiltroPasajero(filtrarPorCalificacion)
         actualizarTextoFiltroPasajeroGuardado(filtrarPorCalificacion, minCalificacion, minViajes)
+
+        // Cargar acciones automáticas
+        val accionesAutomaticas = preferencias.getBoolean(
+            MainActivity.CLAVE_ACCIONES_AUTOMATICAS,
+            MainActivity.VALOR_POR_DEFECTO_ACCIONES_AUTOMATICAS
+        )
+        binding.switchAccionesAutomaticas.isChecked = accionesAutomaticas
     }
 
     private fun configurarListeners() {
@@ -130,6 +137,24 @@ class FragmentoIndrive : Fragment() {
         binding.switchFiltrarCalificacionViajes.setOnCheckedChangeListener { _, isChecked ->
             actualizarEstadoUiFiltroPasajero(isChecked)
         }
+
+        binding.switchAccionesAutomaticas.setOnCheckedChangeListener { _, isChecked ->
+            guardarConfiguracionAccionesAutomaticas(isChecked)
+        }
+    }
+
+    private fun guardarConfiguracionAccionesAutomaticas(isActivado: Boolean) {
+        val preferencias: SharedPreferences = requireActivity().getSharedPreferences(
+            MainActivity.PREFERENCIAS_APP_KAIROS,
+            Context.MODE_PRIVATE
+        )
+        with(preferencias.edit()) {
+            putBoolean(MainActivity.CLAVE_ACCIONES_AUTOMATICAS, isActivado)
+            apply()
+        }
+        enviarNotificacionDeActualizacion()
+        val mensaje = if (isActivado) "Acciones automáticas activadas" else "Acciones automáticas desactivadas"
+        Toast.makeText(requireContext(), mensaje, Toast.LENGTH_SHORT).show()
     }
 
     private fun guardarConfiguracionDistanciaRecogida() {

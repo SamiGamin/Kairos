@@ -67,7 +67,8 @@ class ConfiguracionManager(context: Context) {
             filtrarPorCalificacion = prefs.getBoolean(MainActivity.CLAVE_FILTRAR_CALIFICACION, MainActivity.VALOR_POR_DEFECTO_FILTRAR_CALIFICACION),
             minCalificacion = prefs.getFloat(MainActivity.CLAVE_MIN_CALIFICACION, MainActivity.VALOR_POR_DEFECTO_MIN_CALIFICACION),
             filtrarPorNumeroDeViajes = prefs.getBoolean(MainActivity.CLAVE_FILTRAR_NUMERO_VIAJES, MainActivity.VALOR_POR_DEFECTO_FILTRAR_NUMERO_VIAJES),
-            minViajes = prefs.getInt(MainActivity.CLAVE_MIN_VIAJES, MainActivity.VALOR_POR_DEFECTO_MIN_VIAJES)
+            minViajes = prefs.getInt(MainActivity.CLAVE_MIN_VIAJES, MainActivity.VALOR_POR_DEFECTO_MIN_VIAJES),
+            accionesAutomaticas = prefs.getBoolean(MainActivity.CLAVE_ACCIONES_AUTOMATICAS, MainActivity.VALOR_POR_DEFECTO_ACCIONES_AUTOMATICAS)
         )
 
         val logMsg = """
@@ -78,6 +79,7 @@ class ConfiguracionManager(context: Context) {
             - Ganancia Mínima Viaje: ${configuracion.gananciaMinimaViaje}
             - Filtrar por Calificación: ${if (configuracion.filtrarPorCalificacion) "SI (min. ${configuracion.minCalificacion})" else "NO"}
             - Filtrar por Nº Viajes: ${if (configuracion.filtrarPorNumeroDeViajes) "SI (min. ${configuracion.minViajes})" else "NO"}
+            - Acciones automáticas: ${if (configuracion.accionesAutomaticas) "SI" else "NO"}
         """.trimIndent()
 
         Log.i(TAG_LOG, logMsg)

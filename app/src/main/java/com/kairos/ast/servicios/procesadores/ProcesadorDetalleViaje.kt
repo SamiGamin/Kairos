@@ -41,6 +41,12 @@ object ProcesadorDetalleViaje {
 
         val distanciaDelViaje = infoViaje.distanciaViajeRealKm ?: infoViaje.distanciaEstimadaKm
 
+        // Si las acciones automáticas están desactivadas, solo analiza y sigue buscando.
+        if (!configuracion.accionesAutomaticas) {
+            analizarYLoguearSinActuar(infoViaje, configuracion, distanciaDelViaje)
+            return EstadoServicio.BuscandoEnLista
+        }
+
         // Criterio 1: Manejar viajes con ganancia menor a la mínima.
         if (infoViaje.precioSugeridoNumerico != null && infoViaje.precioSugeridoNumerico < configuracion.gananciaMinimaViaje) {
             // Criterio especial: si el viaje es corto (< 5km), contraofertar con la ganancia mínima.
@@ -66,14 +72,10 @@ object ProcesadorDetalleViaje {
                 "[CÁLCULO] Precio mínimo aceptable (basado en distancia de ${if (infoViaje.distanciaViajeRealKm != null) "API" else "UI"}): $precioMinimoCalculado"
             )
 
-            // DECISIÓN: Aceptar, Contraofertar o Ignorar
-            // Si el precio sugerido es mayor o igual a nuestro mínimo, no hacemos nada y dejamos que el usuario decida.
-            // Esto corrige el bug de contraofertar a la baja.
             if (infoViaje.precioSugeridoNumerico != null && infoViaje.precioSugeridoNumerico >= precioMinimoCalculado) {
-                Log.i(TAG_LOG, "[DECISIÓN] PRECIO ACEPTABLE. El sugerido (${infoViaje.precioSugeridoNumerico}) es >= al mínimo (${precioMinimoCalculado}). No se requiere acción automática.")
-                return EstadoServicio.BuscandoEnLista
+                Log.i(TAG_LOG, "[DECISIÓN] PRECIO ACEPTABLE. El sugerido (${infoViaje.precioSugeridoNumerico}) es >= al mínimo (${precioMinimoCalculado}). Aceptando automáticamente.")
+                return intentarAceptar(infoViaje)
             } else {
-                // Si el precio es bajo o no existe, contraofertamos con nuestro mínimo.
                 if (infoViaje.precioSugeridoNumerico != null) {
                     Log.i(TAG_LOG, "[DECISIÓN] CONTRAOFERTAR. El sugerido (${infoViaje.precioSugeridoNumerico}) es < al mínimo (${precioMinimoCalculado}).")
                 } else {
@@ -91,6 +93,60 @@ object ProcesadorDetalleViaje {
     }
 
     /**
+     * Realiza el mismo análisis que `procesar` pero sin ejecutar acciones, solo registrando en el log
+     * la decisión que se habría tomado. Se usa cuando las acciones automáticas están desactivadas.
+     */
+    private fun analizarYLoguearSinActuar(
+        infoViaje: DetalleViaje,
+        configuracion: ConfiguracionServicio,
+        distanciaDelViaje: Float?
+    ) {
+        Log.i(TAG_LOG, "[ANÁLISIS - MODO MANUAL]")
+
+        // Criterio 1: Ganancia mínima
+        if (infoViaje.precioSugeridoNumerico != null && infoViaje.precioSugeridoNumerico < configuracion.gananciaMinimaViaje) {
+            if (distanciaDelViaje != null && distanciaDelViaje < 5.0f) {
+                Log.i(TAG_LOG, "[ANÁLISIS] Se habría contraofertado con la ganancia mínima por ser un viaje corto.")
+            } else {
+                Log.i(TAG_LOG, "[ANÁLISIS] Se habría descartado el viaje por ganancia menor a la mínima.")
+            }
+            return
+        }
+
+        // Criterio 2: Precio mínimo calculado
+        if (distanciaDelViaje != null && distanciaDelViaje > 0) {
+            val precioMinimoCalculado = distanciaDelViaje * configuracion.gananciaPorKmDeseada
+            if (infoViaje.precioSugeridoNumerico != null && infoViaje.precioSugeridoNumerico >= precioMinimoCalculado) {
+                Log.i(TAG_LOG, "[ANÁLISIS] Se habría ACEPTADO el viaje automáticamente.")
+            } else {
+                Log.i(TAG_LOG, "[ANÁLISIS] Se habría CONTRAOFERTADO con el precio mínimo calculado.")
+            }
+        } else {
+            Log.w(TAG_LOG, "[ANÁLISIS] No se pudo obtener la distancia del viaje para tomar una decisión.")
+        }
+    }
+
+    /**
+     * Intenta hacer clic en el botón de Aceptar viaje.
+     */
+    private fun intentarAceptar(infoViaje: DetalleViaje): EstadoServicio {
+        infoViaje.botones.nodoBotonAceptar?.let {
+            Log.d(TAG_LOG, "[ACEPTAR] Intentando clic en botón Aceptar.")
+            val exito = it.intentarClic()
+            it.recycle()
+
+            if (exito) {
+                Log.i(TAG_LOG, "[ACEPTAR] Clic en Aceptar exitoso.")
+            } else {
+                Log.w(TAG_LOG, "[ACEPTAR] El clic en el botón Aceptar falló.")
+            }
+        } ?: run {
+            Log.w(TAG_LOG, "[ACEPTAR] No se encontró el botón Aceptar.")
+        }
+        return EstadoServicio.BuscandoEnLista // Siempre volver a buscar después de la acción
+    }
+
+    /**
      * Intenta hacer clic en el botón de editar para iniciar una contraoferta.
      */
     private fun intentarContraoferta(
@@ -101,7 +157,7 @@ object ProcesadorDetalleViaje {
         Log.i(TAG_LOG, "[CONTRAOFERTA] Preparando contraoferta: $tarifa")
         onContraoferta(tarifa) // Informar al servicio principal la tarifa a establecer
 
-        infoViaje.botones.nodoBotonEditar?.let {
+        infoViaje.botones.nodoBotonEditar?.let { 
             Log.d(TAG_LOG, "[CONTRAOFERTA] Intentando clic en botón Editar.")
             val exito = it.intentarClic()
             it.recycle() // Reciclamos el nodo del botón después de usarlo.
