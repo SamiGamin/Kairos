@@ -16,4 +16,10 @@
         android:id="@+id/adminFragment"
         android:icon="@drawable/ic_security"
         android:title="Admin" />
+ <item
+        android:id="@+id/planesFragment"
+        android:icon="@drawable/ic_store"
+        android:title="Tienda" />
+
+
 </menu>

@@ -40,23 +40,13 @@ class PerfilFragment : Fragment() {
             state.usuario?.let { usuario ->
                 binding.tvUserName.text = usuario.nombre ?: "Sin nombre"
                 binding.tvUserEmail.text = usuario.email
-
                 // Cargar la información del plan
                 binding.tvPlanStatus.text = "Plan: ${usuario.tipo_plan.replaceFirstChar { it.titlecase() }}"
                 binding.estadoPlan.text = usuario.estado_plan
-
-                if (usuario.tipo_plan == "gratuito") {
-                    binding.tvPlanStatus.text = "Plan: ${usuario.tipo_plan.replaceFirstChar { it.titlecase() }}"
-                    val remainingDays = DateUtils.calculateRemainingDays(usuario.fecha_expiracion_plan)
-                    binding.tvPlanExpiry.text = "Vence en: $remainingDays días"
-                    binding.tvPlanExpiry.visibility = View.VISIBLE
-
-                    val formattedDate = DateUtils.formatReadableDateTime(usuario.fecha_expiracion_plan)
-                    binding.tvfechaExpiracion.text = "Finaliza el: $formattedDate"
-                } else {
-                    binding.tvPlanExpiry.visibility = View.GONE
-                    binding.tvfechaExpiracion.text = ""
-                }
+                val remainingDays = DateUtils.calculateRemainingDays(usuario.fecha_expiracion_plan)
+                binding.tvPlanExpiry.text = "Vence en: $remainingDays días"
+                val formattedDate = DateUtils.formatReadableDateTime(usuario.fecha_expiracion_plan)
+                binding.tvfechaExpiracion.text = "Finaliza el: $formattedDate"
             }
 
             state.error?.let {

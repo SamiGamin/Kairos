@@ -7,13 +7,16 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import com.kairos.ast.databinding.ActivityMainBinding
 import com.kairos.ast.model.UserRoleManager
+import com.kairos.ast.ui.dialogs.PlanExpiradoDialogFragment
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), PlanExpiradoDialogFragment.PlanExpiradoDialogListener {
 
     companion object {
         const val PREFERENCIAS_APP_KAIROS = "PreferenciasAppKairos"
@@ -46,6 +49,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
+    private lateinit var navController: NavController
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,7 +71,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun configurarNavegacion() {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.contenedor_fragmentos) as NavHostFragment
-        val navController = navHostFragment.navController
+        navController = navHostFragment.navController
+
+        // Definir los destinos de nivel superior (los que están en el BottomNavigationView)
+        val appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.fragmentoIndrive, R.id.permisosFragment, R.id.perfilFragment, R.id.adminFragment, R.id.planesFragment
+            )
+        )
+
+        // Configurar el BottomNavigationView con el NavController y la configuración de AppBar
         NavigationUI.setupWithNavController(binding.vistaNavegacionInferior, navController)
 
         // Navegación condicional basada en el Intent de SplashActivity
@@ -91,6 +104,14 @@ class MainActivity : AppCompatActivity() {
 
             // El perfil siempre está habilitado para poder gestionar la cuenta
             menu.findItem(R.id.perfilFragment)?.isEnabled = true
+            menu.findItem(R.id.planesFragment)?.isEnabled = true
+
+            // Mostrar diálogo de plan expirado si corresponde
+            // NOTA: Asegúrate de que 'vencido' sea el valor correcto para el estado del plan expirado en tu base de datos.
+            if (usuario?.estado_plan == "expirado" && !viewModel.planExpiradoDialogMostrado) {
+                PlanExpiradoDialogFragment().show(supportFragmentManager, "PlanExpiradoDialog")
+                viewModel.planExpiradoDialogMostrado = true
+            }
         }
     }
 
@@ -101,5 +122,12 @@ class MainActivity : AppCompatActivity() {
         val menu = binding.vistaNavegacionInferior.menu
         val adminMenuItem = menu.findItem(R.id.adminFragment)
         adminMenuItem?.isVisible = UserRoleManager.isAdmin(this)
+        val userPlanMenuItem = menu.findItem(R.id.planesFragment)
+        userPlanMenuItem?.isVisible = !UserRoleManager.isAdmin(this)
+
+    }
+
+    override fun onVerPlanesClicked() {
+        navController.navigate(R.id.planesFragment)
     }
 }

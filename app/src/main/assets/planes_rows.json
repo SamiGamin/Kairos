@@ -1,0 +1,54 @@
+[
+    {
+        "idx": 0,
+        "id": "arranque_semanal_cop",
+        "name": "Plan de Arranque",
+        "description": "La forma más rápida de probar Kairos. Desbloquea las herramientas esenciales para aumentar tus ganancias desde el primer día.",
+        "price": "$12.900 / semana",
+        "duration_days": 7,
+        "features": "[\"Análisis y contraoferta automáticos\", \"Filtros de distancia y optimización de rutas\", \"Soporte estándar por correo\"]",
+        "is_popular": false,
+        "is_enabled": true,
+        "style": "ELEVATED",
+        "display_order": 1
+    },
+    {
+        "idx": 1,
+        "id": "leyenda_anual_cop",
+        "name": "Plan Leyenda",
+        "description": "La inversión definitiva para el conductor profesional. Conviértete en Leyenda con el máximo ahorro y beneficios exclusivos.",
+        "price": "$399.900 / año",
+        "duration_days": 365,
+        "features": "[\"Todo lo del Plan Pro\", \"El mayor ahorro (equivale a 2 meses gratis)\", \"Acceso prioritario a todas las funciones beta\", \"Insignia de Conductor Leyenda (próximamente)\"]",
+        "is_popular": false,
+        "is_enabled": true,
+        "style": "ELEVATED",
+        "display_order": 4
+    },
+    {
+        "idx": 2,
+        "id": "plus_trimestral_cop",
+        "name": "Plan Conductor Plus",
+        "description": "Acelera tus ganancias a largo plazo. Comprométete tres meses y obtén todos los beneficios Pro con un descuento especial.",
+        "price": "$99.900 / trimestre",
+        "duration_days": 90,
+        "features": "[\"Todo lo del Plan Pro\", \"Ahorra un 17% vs. el plan mensual\", \"Acceso anticipado a estadísticas de rendimiento\"]",
+        "is_popular": false,
+        "is_enabled": true,
+        "style": "ELEVATED",
+        "display_order": 3
+    },
+    {
+        "idx": 3,
+        "id": "pro_mensual_cop",
+        "name": "Plan Pro",
+        "description": "¡El más popular! La herramienta definitiva para el conductor que busca maximizar sus ganancias diarias con soporte directo.",
+        "price": "$39.900 / mes",
+        "duration_days": 30,
+        "features": "[\"Todo lo del Plan de Arranque\", \"Soporte prioritario por WhatsApp\", \"Actualizaciones y mejoras constantes\"]",
+        "is_popular": true,
+        "is_enabled": true,
+        "style": "OUTLINED",
+        "display_order": 2
+    }
+]

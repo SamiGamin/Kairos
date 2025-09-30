@@ -1,10 +1,12 @@
 package com.kairos.ast.ui.perfil
 
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kairos.ast.model.Plan
 import com.kairos.ast.model.SupabaseClient
 import com.kairos.ast.model.Usuario
 import io.github.jan.supabase.auth.auth
@@ -17,6 +19,7 @@ import kotlinx.serialization.decodeFromString
 data class PerfilUiState(
     val isLoading: Boolean = true,
     val usuario: Usuario? = null,
+    val plan: Plan? = null,
     val error: String? = null
 )
 
@@ -27,7 +30,7 @@ sealed class PerfilEvent {
     object OnManageSubscription : PerfilEvent()
 }
 
-class PerfilViewModel : ViewModel() {
+class PerfilViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val TAG = "PerfilViewModel"
@@ -36,7 +39,10 @@ class PerfilViewModel : ViewModel() {
     private val _uiState = MutableLiveData<PerfilUiState>()
     val uiState: LiveData<PerfilUiState> = _uiState
 
+    private var planes: List<Plan> = emptyList()
+
     init {
+        loadPlans()
         loadUserProfile()
     }
 
@@ -45,6 +51,17 @@ class PerfilViewModel : ViewModel() {
             is PerfilEvent.OnLogout -> logout()
             // Handle other events later
             else -> {}
+        }
+    }
+
+    private fun loadPlans() {
+        try {
+            val jsonString = getApplication<Application>().assets.open("planes_rows.json").bufferedReader().use { it.readText() }
+            planes = Json.decodeFromString<List<Plan>>(jsonString)
+            Log.d(TAG, "Planes cargados exitosamente: ${planes.size} planes encontrados.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error al cargar o parsear los planes desde assets", e)
+            _uiState.postValue(PerfilUiState(isLoading = false, error = "Error al cargar la configuración de planes."))
         }
     }
 
@@ -70,7 +87,13 @@ class PerfilViewModel : ViewModel() {
                 val perfilUsuario = Json.decodeFromString<List<Usuario>>(result.data).first()
                 Log.d(TAG, "Perfil decodificado: $perfilUsuario")
 
-                _uiState.postValue(PerfilUiState(isLoading = false, usuario = perfilUsuario))
+                // Find the user's plan from the loaded plans
+                val planUsuario = planes.find { it.id == perfilUsuario.tipo_plan }
+                if (planUsuario == null) {
+                    Log.w(TAG, "No se encontró un plan que coincida con el tipo de plan del usuario: ${perfilUsuario.tipo_plan}")
+                }
+
+                _uiState.postValue(PerfilUiState(isLoading = false, usuario = perfilUsuario, plan = planUsuario))
 
             } catch (e: Exception) {
                 Log.e(TAG, "Excepción al cargar el perfil de usuario", e)

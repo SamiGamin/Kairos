@@ -9,30 +9,35 @@
     tools:context=".ui.perfil.PerfilFragment"
     android:padding="24dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <!-- Header -->
         <LinearLayout
+            android:id="@+id/linearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:gravity="center"
+            android:orientation="vertical"
             android:paddingTop="40dp"
-            android:paddingBottom="32dp">
+            android:paddingBottom="32dp"
+            app:layout_constraintBottom_toTopOf="@+id/materialCardView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/ivAvatar"
                 android:layout_width="96dp"
                 android:layout_height="96dp"
+                android:background="?attr/colorSurfaceContainerHighest"
+                android:padding="16dp"
                 android:src="@drawable/ic_person"
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.App.CircularImageView"
                 app:strokeColor="?attr/colorPrimary"
-                app:strokeWidth="2dp"
-                android:padding="16dp"
-                android:background="?attr/colorSurfaceContainerHighest"/>
+                app:strokeWidth="2dp" />
 
             <TextView
                 android:id="@+id/tvUserName"
@@ -40,10 +45,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:gravity="center"
-                tools:text="Nombre de Usuario"
                 android:textAppearance="?attr/textAppearanceHeadlineMedium"
                 android:textColor="@color/md_theme_onBackground"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                tools:text="Nombre de Usuario" />
 
             <TextView
                 android:id="@+id/tvUserEmail"
@@ -51,18 +56,22 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:gravity="center"
-                tools:text="usuario@email.com"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="@color/md_theme_onSurfaceVariant" />
+                android:textColor="@color/md_theme_onSurfaceVariant"
+                tools:text="usuario@email.com" />
 
         </LinearLayout>
 
         <!-- Tarjeta de Información del Plan -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/materialCardView"
             style="@style/Widget.Material3.CardView.Filled"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -110,7 +119,6 @@
                     tools:text="Vence en: 14 días" />
 
 
-
                 <TextView
                     android:id="@+id/tvfechaExpiracion"
                     android:layout_width="wrap_content"
@@ -125,13 +133,6 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Acciones de la Cuenta -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Gestión de la Cuenta"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"/>
 
 
@@ -141,6 +142,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:visibility="gone"
             android:text="Gestionar Suscripción"
             app:icon="@drawable/ic_currency"/>
 
@@ -151,17 +153,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="24dp"
             android:text="Cerrar Sesión"
-            android:textColor="?attr/colorError" />
+            android:textColor="?attr/colorError"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

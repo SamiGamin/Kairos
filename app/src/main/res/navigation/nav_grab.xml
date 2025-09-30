@@ -86,7 +86,11 @@
         android:id="@+id/planesFragment"
         android:name="com.kairos.ast.ui.planes.PlanesFragment"
         android:label="fragment_planes"
-        tools:layout="@layout/fragment_planes" />
+        tools:layout="@layout/fragment_planes" >
+        <action
+            android:id="@+id/action_planesFragment_to_perfilFragment"
+            app:destination="@id/perfilFragment" />
+    </fragment>
     <fragment
         android:id="@+id/adminFragment"
         android:name="com.kairos.ast.ui.admin.AdminFragment"

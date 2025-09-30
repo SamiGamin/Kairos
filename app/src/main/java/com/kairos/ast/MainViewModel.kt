@@ -16,6 +16,8 @@ class MainViewModel : ViewModel() {
     private val _usuario = MutableLiveData<Usuario?>()
     val usuario: LiveData<Usuario?> = _usuario
 
+    var planExpiradoDialogMostrado = false
+
     private val json = Json { ignoreUnknownKeys = true }
 
     init {
