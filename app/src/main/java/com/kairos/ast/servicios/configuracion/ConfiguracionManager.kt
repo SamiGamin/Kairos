@@ -63,16 +63,23 @@ class ConfiguracionManager(context: Context) {
             gananciaMinimaViaje = prefs.getFloat(
                 MainActivity.CLAVE_GANANCIA_MINIMA_VIAJE,
                 MainActivity.VALOR_POR_DEFECTO_GANANCIA_MINIMA_VIAJE
-            )
+            ),
+            filtrarPorCalificacion = prefs.getBoolean(MainActivity.CLAVE_FILTRAR_CALIFICACION, MainActivity.VALOR_POR_DEFECTO_FILTRAR_CALIFICACION),
+            minCalificacion = prefs.getFloat(MainActivity.CLAVE_MIN_CALIFICACION, MainActivity.VALOR_POR_DEFECTO_MIN_CALIFICACION),
+            filtrarPorNumeroDeViajes = prefs.getBoolean(MainActivity.CLAVE_FILTRAR_NUMERO_VIAJES, MainActivity.VALOR_POR_DEFECTO_FILTRAR_NUMERO_VIAJES),
+            minViajes = prefs.getInt(MainActivity.CLAVE_MIN_VIAJES, MainActivity.VALOR_POR_DEFECTO_MIN_VIAJES)
         )
 
-        Log.i(
-            TAG_LOG,
-            "Configuración (re)cargada: Dist. Recogida <" +
-                    " ${configuracion.distanciaMaximaRecogidaKm} km, " +
-            "Tarifa: ${configuracion.gananciaPorKmDeseada}/km" +
-            ", Dist. Viaje AB < ${configuracion.distanciaMaximaViajeABKm} km" +
-            ", Ganancia Mínima Viaje: ${configuracion.gananciaMinimaViaje}"
-        )
+        val logMsg = """
+            Configuración (re)cargada:
+            - Dist. Recogida < ${configuracion.distanciaMaximaRecogidaKm} km
+            - Dist. Viaje AB < ${configuracion.distanciaMaximaViajeABKm} km
+            - Tarifa: ${configuracion.gananciaPorKmDeseada}/km
+            - Ganancia Mínima Viaje: ${configuracion.gananciaMinimaViaje}
+            - Filtrar por Calificación: ${if (configuracion.filtrarPorCalificacion) "SI (min. ${configuracion.minCalificacion})" else "NO"}
+            - Filtrar por Nº Viajes: ${if (configuracion.filtrarPorNumeroDeViajes) "SI (min. ${configuracion.minViajes})" else "NO"}
+        """.trimIndent()
+
+        Log.i(TAG_LOG, logMsg)
     }
 }

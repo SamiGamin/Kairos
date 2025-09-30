@@ -78,6 +78,27 @@ class FragmentoIndrive : Fragment() {
         )
         binding.campoGananciaMinima.setText(gananciaMinimaGuardada.toInt().toString())
         actualizarTextoGananciaMinima(gananciaMinimaGuardada)
+
+        // Cargar filtro de pasajero
+        val filtrarPorCalificacion = preferencias.getBoolean(
+            MainActivity.CLAVE_FILTRAR_CALIFICACION,
+            MainActivity.VALOR_POR_DEFECTO_FILTRAR_CALIFICACION
+        )
+        val minCalificacion = preferencias.getFloat(
+            MainActivity.CLAVE_MIN_CALIFICACION,
+            MainActivity.VALOR_POR_DEFECTO_MIN_CALIFICACION
+        )
+        val minViajes = preferencias.getInt(
+            MainActivity.CLAVE_MIN_VIAJES,
+            MainActivity.VALOR_POR_DEFECTO_MIN_VIAJES
+        )
+
+        binding.switchFiltrarCalificacionViajes.isChecked = filtrarPorCalificacion
+        binding.campoCalificacionMinima.setText(minCalificacion.toString())
+        binding.campoViajesMinimos.setText(minViajes.toString())
+
+        actualizarEstadoUiFiltroPasajero(filtrarPorCalificacion)
+        actualizarTextoFiltroPasajeroGuardado(filtrarPorCalificacion, minCalificacion, minViajes)
     }
 
     private fun configurarListeners() {
@@ -99,6 +120,15 @@ class FragmentoIndrive : Fragment() {
         binding.botonGuardarGananciaMinima.setOnClickListener {
             ocultarTeclado()
             guardarConfiguracionGananciaMinima()
+        }
+
+        binding.botonGuardarFiltroPasajero.setOnClickListener {
+            ocultarTeclado()
+            guardarConfiguracionFiltroPasajero()
+        }
+
+        binding.switchFiltrarCalificacionViajes.setOnCheckedChangeListener { _, isChecked ->
+            actualizarEstadoUiFiltroPasajero(isChecked)
         }
     }
 
@@ -206,6 +236,45 @@ class FragmentoIndrive : Fragment() {
         }
     }
 
+    private fun guardarConfiguracionFiltroPasajero() {
+        val isActivado = binding.switchFiltrarCalificacionViajes.isChecked
+        val calificacionStr = binding.campoCalificacionMinima.text.toString()
+        val viajesStr = binding.campoViajesMinimos.text.toString()
+
+        try {
+            val nuevaCalificacion = calificacionStr.toFloatOrNull() ?: MainActivity.VALOR_POR_DEFECTO_MIN_CALIFICACION
+            val nuevosViajes = viajesStr.toIntOrNull() ?: MainActivity.VALOR_POR_DEFECTO_MIN_VIAJES
+
+            if (isActivado && (nuevaCalificacion < 0 || nuevaCalificacion > 5)) {
+                Toast.makeText(requireContext(), "La calificación debe estar entre 0.0 y 5.0", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            if (isActivado && nuevosViajes < 0) {
+                Toast.makeText(requireContext(), "El número de viajes no puede ser negativo", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val preferencias: SharedPreferences = requireActivity().getSharedPreferences(
+                MainActivity.PREFERENCIAS_APP_KAIROS,
+                Context.MODE_PRIVATE
+            )
+            with(preferencias.edit()) {
+                putBoolean(MainActivity.CLAVE_FILTRAR_CALIFICACION, isActivado)
+                putBoolean(MainActivity.CLAVE_FILTRAR_NUMERO_VIAJES, isActivado)
+                putFloat(MainActivity.CLAVE_MIN_CALIFICACION, nuevaCalificacion)
+                putInt(MainActivity.CLAVE_MIN_VIAJES, nuevosViajes)
+                apply()
+            }
+            enviarNotificacionDeActualizacion()
+            actualizarTextoFiltroPasajeroGuardado(isActivado, nuevaCalificacion, nuevosViajes)
+            Toast.makeText(requireContext(), "Configuración de filtro de pasajero guardada.", Toast.LENGTH_SHORT).show()
+
+        } catch (e: NumberFormatException) {
+            Toast.makeText(requireContext(), "Error de formato en calificación o viajes.", Toast.LENGTH_LONG).show()
+        }
+    }
+
     private fun enviarNotificacionDeActualizacion() {
         val intent = Intent(MainActivity.ACCION_ACTUALIZAR_CONFIGURACION)
         requireContext().sendBroadcast(intent)
@@ -225,6 +294,20 @@ class FragmentoIndrive : Fragment() {
 
     private fun actualizarTextoGananciaMinima(ganancia: Float) {
         binding.textoGananciaMinimaGuardada.text = getString(R.string.texto_ganancia_minima_guardada, ganancia.toInt())
+    }
+
+    private fun actualizarTextoFiltroPasajeroGuardado(isActivado: Boolean, calificacion: Float, viajes: Int) {
+        binding.textoFiltroPasajeroGuardado.text = if (isActivado) {
+            "Activado: Calificación >= $calificacion, Viajes >= $viajes"
+        } else {
+            "Filtro desactivado"
+        }
+    }
+
+    private fun actualizarEstadoUiFiltroPasajero(isActivado: Boolean) {
+        binding.layoutCalificacionMinima.isEnabled = isActivado
+        binding.layoutViajesMinimos.isEnabled = isActivado
+        binding.botonGuardarFiltroPasajero.isEnabled = isActivado
     }
 
     override fun onDestroyView() {

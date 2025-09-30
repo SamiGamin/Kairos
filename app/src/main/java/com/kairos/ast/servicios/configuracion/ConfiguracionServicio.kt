@@ -7,5 +7,9 @@ data class ConfiguracionServicio(
     val distanciaMaximaRecogidaKm: Float,
     val distanciaMaximaViajeABKm: Float,
     val gananciaPorKmDeseada: Float,
-    val gananciaMinimaViaje: Float
+    val gananciaMinimaViaje: Float,
+    val filtrarPorCalificacion: Boolean,
+    val minCalificacion: Float,
+    val filtrarPorNumeroDeViajes: Boolean,
+    val minViajes: Int
 )

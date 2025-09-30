@@ -19,9 +19,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// Import añadido para el Dumper
-import com.kairos.ast.servicios.AccessibilityNodeDumper
-import com.kairos.ast.servicios.procesadores.ProcesadorCalificacion
 
 class ServicioAccesibilidad : AccessibilityService() {
 
@@ -100,17 +97,22 @@ class ServicioAccesibilidad : AccessibilityService() {
 
     private fun gestionarEstadoBuscandoEnLista(evento: AccessibilityEvent?, nodoRaiz: AccessibilityNodeInfo) {
         if (evento?.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED || evento?.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+            // DUMP DE NODOS para análisis de nuevas funciones
+            Log.d(TAG_LOG, ">>>> INICIO DUMP DE NODOS (LISTA DE VIAJES) <<<<")
+            AccessibilityNodeDumper.dumpNodes(nodoRaiz)
+            Log.d(TAG_LOG, ">>>> FIN DUMP DE NODOS (LISTA DE VIAJES) <<<<")
+
             serviceScope.launch {
                 val nodoCopia = AccessibilityNodeInfo.obtain(nodoRaiz)
                 try {
                     val nodoParaClic = ListaViajesProcessor.encontrarViajeParaAceptar(
                         nodoCopia,
-                        configManager.configuracion.distanciaMaximaRecogidaKm,
-                        configManager.configuracion.distanciaMaximaViajeABKm
+                        configManager.configuracion
                     )
 
                     if (nodoParaClic != null) {
                         if (nodoParaClic.intentarClic()) {
+                            Log.i(TAG_LOG, "Se encontró un viaje compatible y se hizo clic para ver detalles.")
                             transicionarA(EstadoServicio.EsperandoAparicionDetalle)
                         } else {
                             Log.w(TAG_LOG, "Se encontró un viaje, pero el clic falló.")
@@ -135,7 +137,6 @@ class ServicioAccesibilidad : AccessibilityService() {
     private fun gestionarEstadoRevelandoDetalle(nodoRaiz: AccessibilityNodeInfo) {
         ProcesadorRevelado.revelarContenido(nodoRaiz)
         Log.i(TAG_LOG, "Contenido revelando. Esperando procesamiento.")
-        ProcesadorCalificacion.extraer(nodoRaiz)
         transicionarA(EstadoServicio.EnDetalleProcesando)
     }
 

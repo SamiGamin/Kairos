@@ -25,6 +25,17 @@ class MainActivity : AppCompatActivity() {
         const val VALOR_POR_DEFECTO_DISTANCIA_VIAJE_AB_KM = 15.0f
         const val CLAVE_GANANCIA_MINIMA_VIAJE = "gananciaMinimaViaje"
         const val VALOR_POR_DEFECTO_GANANCIA_MINIMA_VIAJE = 10000f
+
+        // Claves para filtros opcionales
+        const val CLAVE_FILTRAR_CALIFICACION = "filtrarPorCalificacion"
+        const val VALOR_POR_DEFECTO_FILTRAR_CALIFICACION = false
+        const val CLAVE_MIN_CALIFICACION = "minCalificacion"
+        const val VALOR_POR_DEFECTO_MIN_CALIFICACION = 4.5f
+        const val CLAVE_FILTRAR_NUMERO_VIAJES = "filtrarPorNumeroDeViajes"
+        const val VALOR_POR_DEFECTO_FILTRAR_NUMERO_VIAJES = false
+        const val CLAVE_MIN_VIAJES = "minViajes"
+        const val VALOR_POR_DEFECTO_MIN_VIAJES = 100
+
         const val ACCION_ACTUALIZAR_CONFIGURACION = "com.kairos.ast.ACCION_ACTUALIZAR_CONFIGURACION"
 
     }
