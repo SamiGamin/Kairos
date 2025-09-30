@@ -1,6 +1,7 @@
 package com.kairos.ast.ui.perfil
 
 import android.app.Application
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -11,13 +12,16 @@ import com.kairos.ast.model.SupabaseClient
 import com.kairos.ast.model.Usuario
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
+import java.util.UUID
 
 // State for the UI
 data class PerfilUiState(
     val isLoading: Boolean = true,
+    val isUploading: Boolean = false,
     val usuario: Usuario? = null,
     val plan: Plan? = null,
     val error: String? = null
@@ -26,14 +30,14 @@ data class PerfilUiState(
 // Events from the UI
 sealed class PerfilEvent {
     object OnLogout : PerfilEvent()
-    object OnChangePassword : PerfilEvent()
-    object OnManageSubscription : PerfilEvent()
+    data class OnAvatarSelected(val uri: Uri) : PerfilEvent()
 }
 
 class PerfilViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val TAG = "PerfilViewModel"
+        private const val AVATAR_BUCKET = "avatars"
     }
 
     private val _uiState = MutableLiveData<PerfilUiState>()
@@ -42,31 +46,69 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
     private var planes: List<Plan> = emptyList()
 
     init {
-        loadPlans()
+        // loadPlans() // Se asume que los planes ahora vienen de Supabase
         loadUserProfile()
     }
 
     fun onEvent(event: PerfilEvent) {
         when (event) {
             is PerfilEvent.OnLogout -> logout()
-            // Handle other events later
-            else -> {}
+            is PerfilEvent.OnAvatarSelected -> uploadAvatar(event.uri)
         }
     }
 
-    private fun loadPlans() {
-        try {
-            val jsonString = getApplication<Application>().assets.open("planes_rows.json").bufferedReader().use { it.readText() }
-            planes = Json.decodeFromString<List<Plan>>(jsonString)
-            Log.d(TAG, "Planes cargados exitosamente: ${planes.size} planes encontrados.")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error al cargar o parsear los planes desde assets", e)
-            _uiState.postValue(PerfilUiState(isLoading = false, error = "Error al cargar la configuración de planes."))
+    private fun uploadAvatar(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value?.copy(isUploading = true)
+            try {
+                val user = SupabaseClient.client.auth.currentUserOrNull() ?: throw IllegalStateException("Usuario no autenticado")
+                val oldAvatarUrl = _uiState.value?.usuario?.avatar_url
+
+                val fileBytes = getApplication<Application>().contentResolver.openInputStream(uri)?.readBytes() ?: throw IllegalStateException("No se pudo leer el archivo de imagen")
+                
+                val filePath = "${user.id}/${UUID.randomUUID()}.jpg"
+
+                // 1. Subir la nueva imagen
+                val storage = SupabaseClient.client.storage
+                storage.from(AVATAR_BUCKET).upload(filePath, fileBytes) {
+                    upsert = true
+                }
+
+                // 2. Obtener la URL pública de la nueva imagen
+                val publicUrl = storage.from(AVATAR_BUCKET).publicUrl(filePath)
+
+                // 3. Actualizar la tabla de usuarios con la nueva URL
+                val updates = mapOf("avatar_url" to publicUrl)
+                SupabaseClient.client.from("usuarios").update(updates) {
+                    filter { eq("id", user.id) }
+                }
+
+                // 4. Eliminar la imagen anterior si existía
+                if (!oldAvatarUrl.isNullOrEmpty()) {
+                    try {
+                        val oldFilePath = oldAvatarUrl.substringAfter("$AVATAR_BUCKET/")
+                        Log.d(TAG, "Eliminando avatar anterior: $oldFilePath")
+                        storage.from(AVATAR_BUCKET).delete(listOf(oldFilePath))
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error al eliminar el avatar anterior (puede que ya no exista).", e)
+                        // No detenemos el flujo si la eliminación falla.
+                    }
+                }
+
+                // 5. Recargar el perfil para mostrar la nueva imagen
+                loadUserProfile()
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al subir el avatar", e)
+                _uiState.postValue(_uiState.value?.copy(isUploading = false, error = "Error al subir la imagen: ${e.message}"))
+            } finally {
+                _uiState.value = _uiState.value?.copy(isUploading = false)
+            }
         }
     }
 
     private fun loadUserProfile() {
-        _uiState.value = PerfilUiState(isLoading = true)
+        _uiState.value = _uiState.value?.copy(isLoading = true) ?: PerfilUiState(isLoading = true)
         Log.d(TAG, "Iniciando carga de perfil de usuario...")
         viewModelScope.launch {
             try {
@@ -79,21 +121,16 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
                 Log.d(TAG, "Usuario autenticado encontrado: ${user.id}")
 
                 // Fetch profile from 'usuarios' table
-                Log.d(TAG, "Consultando tabla 'usuarios' para el id: ${user.id}")
                 val result = SupabaseClient.client.from("usuarios").select {
                     filter { eq("id", user.id) }
                 }
-                Log.d(TAG, "Respuesta de Supabase: ${result.data}")
-                val perfilUsuario = Json.decodeFromString<List<Usuario>>(result.data).first()
+                val perfilUsuario = Json { ignoreUnknownKeys = true }.decodeFromString<List<Usuario>>(result.data).first()
                 Log.d(TAG, "Perfil decodificado: $perfilUsuario")
 
-                // Find the user's plan from the loaded plans
-                val planUsuario = planes.find { it.id == perfilUsuario.tipo_plan }
-                if (planUsuario == null) {
-                    Log.w(TAG, "No se encontró un plan que coincida con el tipo de plan del usuario: ${perfilUsuario.tipo_plan}")
-                }
+                // Aquí iría la lógica para cargar los planes desde Supabase si fuera necesario
+                // val planUsuario = planes.find { it.id == perfilUsuario.tipo_plan }
 
-                _uiState.postValue(PerfilUiState(isLoading = false, usuario = perfilUsuario, plan = planUsuario))
+                _uiState.postValue(PerfilUiState(isLoading = false, usuario = perfilUsuario, plan = null))
 
             } catch (e: Exception) {
                 Log.e(TAG, "Excepción al cargar el perfil de usuario", e)

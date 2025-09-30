@@ -106,6 +106,8 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
 
+    // Image loading
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 
 
 

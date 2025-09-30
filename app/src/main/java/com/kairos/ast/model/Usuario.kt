@@ -9,6 +9,7 @@ data class Usuario(
     val id: String,                 // uuid
     val email: String,
     val nombre: String? = null,
+    val avatar_url: String? = null, // URL de la imagen de perfil
     val telefono: String? = null,
     val rol: String = "usuario",          // Rol del usuario (admin, usuario)
     val tipo_plan: String = "gratuito",   // por defecto gratuito
