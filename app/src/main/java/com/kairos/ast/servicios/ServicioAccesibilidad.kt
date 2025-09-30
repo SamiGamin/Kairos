@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 
 // Import añadido para el Dumper
 import com.kairos.ast.servicios.AccessibilityNodeDumper
+import com.kairos.ast.servicios.procesadores.ProcesadorCalificacion
 
 class ServicioAccesibilidad : AccessibilityService() {
 
@@ -133,7 +134,8 @@ class ServicioAccesibilidad : AccessibilityService() {
 
     private fun gestionarEstadoRevelandoDetalle(nodoRaiz: AccessibilityNodeInfo) {
         ProcesadorRevelado.revelarContenido(nodoRaiz)
-        // Siempre transicionamos, incluso si falla, para intentar procesar lo que sea visible.
+        Log.i(TAG_LOG, "Contenido revelando. Esperando procesamiento.")
+        ProcesadorCalificacion.extraer(nodoRaiz)
         transicionarA(EstadoServicio.EnDetalleProcesando)
     }
 

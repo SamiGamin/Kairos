@@ -66,12 +66,24 @@ object ProcesadorDetalleViaje {
                 "[CÁLCULO] Precio mínimo aceptable (basado en distancia de ${if (infoViaje.distanciaViajeRealKm != null) "API" else "UI"}): $precioMinimoCalculado"
             )
 
-            // Lógica de contraoferta estándar
-            val contraoferta = (Math.ceil(precioMinimoCalculado / 500.0) * 500).toInt().toString()
-            Log.i(TAG_LOG, "[DECISIÓN] Contraofertando (calculado): $contraoferta")
-            
-            return intentarContraoferta(infoViaje, contraoferta, onContraoferta)
-
+            // DECISIÓN: Aceptar, Contraofertar o Ignorar
+            // Si el precio sugerido es mayor o igual a nuestro mínimo, no hacemos nada y dejamos que el usuario decida.
+            // Esto corrige el bug de contraofertar a la baja.
+            if (infoViaje.precioSugeridoNumerico != null && infoViaje.precioSugeridoNumerico >= precioMinimoCalculado) {
+                Log.i(TAG_LOG, "[DECISIÓN] PRECIO ACEPTABLE. El sugerido (${infoViaje.precioSugeridoNumerico}) es >= al mínimo (${precioMinimoCalculado}). No se requiere acción automática.")
+                return EstadoServicio.BuscandoEnLista
+            } else {
+                // Si el precio es bajo o no existe, contraofertamos con nuestro mínimo.
+                if (infoViaje.precioSugeridoNumerico != null) {
+                    Log.i(TAG_LOG, "[DECISIÓN] CONTRAOFERTAR. El sugerido (${infoViaje.precioSugeridoNumerico}) es < al mínimo (${precioMinimoCalculado}).")
+                } else {
+                    Log.i(TAG_LOG, "[DECISIÓN] No hay precio sugerido. Contraofertando con el mínimo calculado.")
+                }
+                
+                val contraoferta = (Math.ceil(precioMinimoCalculado / 500.0) * 500).toInt().toString()
+                Log.i(TAG_LOG, "[CONTRAOFERTA] Calculando y preparando contraoferta: $contraoferta")
+                return intentarContraoferta(infoViaje, contraoferta, onContraoferta)
+            }
         } else {
             Log.w(TAG_LOG, "[DETALLE] No se pudo obtener la distancia del viaje (ni de API ni de UI). Volviendo a buscar.")
             return EstadoServicio.BuscandoEnLista

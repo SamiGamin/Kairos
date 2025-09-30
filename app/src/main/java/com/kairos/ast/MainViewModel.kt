@@ -22,6 +22,10 @@ class MainViewModel : ViewModel() {
         loadUserProfile()
     }
 
+    fun actualizarEstadoUsuario() {
+        loadUserProfile()
+    }
+
     private fun loadUserProfile() {
         viewModelScope.launch {
             try {

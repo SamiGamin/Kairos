@@ -9,71 +9,61 @@ import com.kairos.ast.servicios.utils.intentarClic
 private const val TAG_LOG = "ProcesadorRevelado"
 
 /**
- * Objeto responsable de la lógica para "revelar" el contenido oculto en la pantalla de detalle.
+ * Objeto responsable de la lógica para iniciar una contraoferta personalizada.
+ * En la UI de la app, esto corresponde a hacer clic en un ícono (un ImageView)
+ * que está junto a las ofertas de precio predefinidas.
  */
 object ProcesadorRevelado {
 
     /**
-     * Busca y hace clic en el elemento correcto para revelar el contenido usando una heurística flexible.
+     * Busca y hace clic en el ícono de "editar oferta" (un ImageView).
+     * La heurística localiza el HorizontalScrollView que contiene las ofertas
+     * y luego busca un ImageView que esté alineado verticalmente con él.
      */
     fun revelarContenido(nodoRaiz: AccessibilityNodeInfo): Boolean {
-        Log.d(TAG_LOG, "Buscando imagen clicable para revelar contenido con heurística flexible...")
+        Log.d(TAG_LOG, "Buscando ícono de editar oferta...")
 
-        // 1. Buscar todos los nodos candidatos una sola vez.
-        val scrollContraofertas = nodoRaiz.buscarNodos { it.className == "android.widget.HorizontalScrollView" }.firstOrNull()
-        val botonCerrar = nodoRaiz.buscarNodos { it.className == "android.widget.Button" && it.text?.toString()?.contains("Cerrar", true) == true }.firstOrNull()
-        val imagenesClicables = nodoRaiz.buscarNodos { it.className == "android.widget.ImageView" && it.isClickable && it.text == null && it.contentDescription == null }
+        // 1. Localizar el HorizontalScrollView que contiene los botones de oferta.
+        val scrollNode = nodoRaiz.buscarNodos { it.className == "android.widget.HorizontalScrollView" }.firstOrNull()
 
-        var imagenObjetivo: AccessibilityNodeInfo? = null
-
-        // Heurística 1: Lógica posicional estricta (entre el scroll y el botón cerrar).
-        if (scrollContraofertas != null && botonCerrar != null) {
-            Log.d(TAG_LOG, "Aplicando heurística estricta (entre scroll y botón cerrar).")
+        if (scrollNode != null) {
             val rectScroll = Rect()
-            scrollContraofertas.getBoundsInScreen(rectScroll)
-            val rectBotonCerrar = Rect()
-            botonCerrar.getBoundsInScreen(rectBotonCerrar)
+            scrollNode.getBoundsInScreen(rectScroll)
+            Log.d(TAG_LOG, "HorizontalScrollView encontrado con bounds: $rectScroll")
 
-            imagenObjetivo = imagenesClicables.find { imagen ->
-                val rectImagen = Rect()
-                imagen.getBoundsInScreen(rectImagen)
-                // La imagen debe estar después del scroll Y antes del botón
-                rectImagen.top >= rectScroll.bottom && rectImagen.bottom <= rectBotonCerrar.top
+            // 2. Buscar todas las ImageView clicables.
+            val imageViews = nodoRaiz.buscarNodos {
+                it.className == "android.widget.ImageView" && it.isClickable
             }
-        }
+            Log.d(TAG_LOG, "Encontradas ${imageViews.size} ImageView(s) clicables.")
 
-        // Heurística 2 (Plan B): Si la primera falla, buscar la imagen más baja que esté por encima del botón "Cerrar".
-        if (imagenObjetivo == null && botonCerrar != null) {
-            Log.d(TAG_LOG, "Aplicando heurística de fallback (imagen sobre el botón cerrar).")
-            val rectBotonCerrar = Rect()
-            botonCerrar.getBoundsInScreen(rectBotonCerrar)
+            // 3. Encontrar la ImageView que está perfectamente alineada verticalmente con el scroll.
+            val targetNode = imageViews.find { 
+                val rectImage = Rect()
+                it.getBoundsInScreen(rectImage)
+                val isAligned = rectImage.top == rectScroll.top && rectImage.bottom == rectScroll.bottom
+                if (isAligned) {
+                    Log.d(TAG_LOG, "ImageView alineada encontrada con bounds: $rectImage")
+                }
+                isAligned
+            }
             
-            imagenObjetivo = imagenesClicables
-                .filter { imagen ->
-                    val rectImagen = Rect()
-                    imagen.getBoundsInScreen(rectImagen)
-                    rectImagen.bottom <= rectBotonCerrar.top // Debe estar estrictamente por encima
-                }
-                .maxByOrNull { imagen ->
-                    val rectImagen = Rect()
-                    imagen.getBoundsInScreen(rectImagen)
-                    rectImagen.top // maxByOrNull encontrará la que tenga el 'top' más grande (la más baja)
-                }
-        }
-        
-        // Limpieza de nodos que no se van a usar.
-        scrollContraofertas?.recycle()
-        botonCerrar?.recycle()
-        imagenesClicables.forEach { if(it != imagenObjetivo) it.recycle() }
+            // Reciclar nodos no utilizados
+            imageViews.forEach { if (it != targetNode) it.recycle() }
+            scrollNode.recycle()
 
-        // Clic final si se encontró un objetivo.
-        if (imagenObjetivo != null) {
-            Log.i(TAG_LOG, "Imagen objetivo encontrada con heurística. Intentando clic.")
-            val exito = imagenObjetivo.intentarClic()
-            imagenObjetivo.recycle() // Reciclamos el objetivo después de usarlo.
-            return exito
+            if (targetNode != null) {
+                Log.i(TAG_LOG, "Ícono de editar oferta encontrado. Intentando clic.")
+                val exito = targetNode.intentarClic()
+                targetNode.recycle()
+                return exito
+            } else {
+                Log.w(TAG_LOG, "No se encontró un ImageView alineado con el HorizontalScrollView.")
+                return false
+            }
+
         } else {
-            Log.w(TAG_LOG, "No se encontró ninguna ImageView que cumpla las heurísticas.")
+            Log.w(TAG_LOG, "No se encontró el HorizontalScrollView de referencia.")
             return false
         }
     }

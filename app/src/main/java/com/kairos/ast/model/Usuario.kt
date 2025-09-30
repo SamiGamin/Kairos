@@ -17,7 +17,7 @@ data class Usuario(
     val fecha_registro: Instant,        // timestamptz en Supabase
     @Serializable(with = InstantSerializer::class)
     val fecha_expiracion_plan: Instant,    // fin del trial
-    val dias_Plan: Int = 3,
+    val dias_Plan: Int,
     val email_verificado: Boolean = false,
     @Serializable(with = InstantSerializer::class)
     val ultimo_login: Instant? = null,

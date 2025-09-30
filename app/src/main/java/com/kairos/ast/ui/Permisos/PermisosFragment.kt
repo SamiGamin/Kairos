@@ -13,7 +13,9 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.kairos.ast.MainViewModel
 import com.kairos.ast.R
 import com.kairos.ast.databinding.DisenoActividadBienvenidaBinding
 import com.kairos.ast.servicios.ServicioAccesibilidad
@@ -22,6 +24,9 @@ class PermisosFragment : Fragment() {
 
     private var _binding: DisenoActividadBienvenidaBinding? = null
     private val binding get() = _binding!!
+
+    // Obtener el ViewModel compartido de la Activity
+    private val mainViewModel: MainViewModel by activityViewModels()
 
     private val TAG_LOGCAT_PERMISOS = "KairosPermisosFragment"
 
@@ -35,6 +40,11 @@ class PermisosFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Notificar al ViewModel principal que actualice el estado del usuario.
+        // Esto hará que la MainActivity observe el cambio y actualice los menús.
+        mainViewModel.actualizarEstadoUsuario()
+
         configurarListeners()
     }
 
